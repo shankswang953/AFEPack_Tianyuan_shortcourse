@@ -7,7 +7,7 @@ internally by `../barycentric_motion.py`.
 make
 ```
 
-Define `CXX`, `AFEPACK_PREFIX`, `OPENBLAS_PREFIX`, and `BOOST_INCLUDE`
-when the defaults do not match the current system. The OpenBLAS and Boost
-defaults are MacPorts paths under `/opt/local`. Object files and executables
-are build products; continuation results are written to `../output/`.
+Define `CXX`, `AFEPACK_PREFIX`, `OPENBLAS_PREFIX`, and `BOOST_INCLUDE` in the
+top-level optional `course_config.local` when the defaults do not match the
+current system. Object files and executables are build products; continuation
+results are written to `../output/`.

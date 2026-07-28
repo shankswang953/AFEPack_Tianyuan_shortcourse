@@ -3,8 +3,8 @@
 This is an internal library module, normally imported by the parent-directory
 entry scripts. `AirfoilMeshEnvironment` reads `data/*.dat`, builds the
 `backend/` programs, and maintains generated state under `output/current/`,
-`output/reference/`, and `output/history/`. Set EASYMESH_BIN and
-EASYMESH2MESH_BIN when the executables are not under `$HOME/bin`.
+`output/reference/`, and `output/history/`. External paths come from the
+repository-wide optional `course_config.local`.
 """
 
 from __future__ import annotations
@@ -13,10 +13,18 @@ import csv
 import os
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+
+_COURSE_ROOT = Path(__file__).resolve().parents[2]
+if str(_COURSE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_COURSE_ROOT))
+from course_config import load_course_config  # noqa: E402
+
+load_course_config(_COURSE_ROOT)
 
 from .geometry import (
     Action,

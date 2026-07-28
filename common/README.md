@@ -143,7 +143,7 @@ Generate all three without modifying the source files:
 
 ```bash
 cd mesh/easymesh_examples
-EASYMESH_BIN=/path/to/easymesh ./run_examples.sh
+./run_examples.sh
 ```
 
 The generated `.d`, `.n`, `.e`, and `.s` files are placed in
@@ -158,18 +158,14 @@ cd ../../../00_poisson_basic
 ./run.sh ../common/mesh/easymesh_examples/output/unit_square
 ```
 
-For code that expects AFEPack's `.mesh` format, configure and run the optional
-converter:
-
-```bash
-export EASYMESH2MESH_BIN=/path/to/easymesh2mesh
-"$EASYMESH2MESH_BIN" unit_square unit_square.mesh
-```
+For code that expects AFEPack's `.mesh` format, set `EASYMESH2MESH_BIN` in the
+top-level optional `course_config.local`. The official launchers load that
+setting before they call the converter.
 
 ## Common problems
 
 - **`EasyMesh executable not found`**: set `EASYMESH_BIN` to an executable
-  absolute path.
+  absolute path in the top-level `course_config.local`.
 - **No mesh files appear**: run without `-m`, then check point indices,
   segment indices, loop closure, and intersecting segments.
 - **The hole is filled**: reverse the hole loop so that it is clockwise.

@@ -5,13 +5,15 @@
 # All arguments are forwarded to train_dqn.py; use --help for the full list.
 # Output: checkpoints, configuration, training history, rollout data, PNGs,
 # and GIFs below output/.
-# Configuration: set PYTHON to an interpreter with NumPy, PyTorch, Matplotlib,
-# and ImageIO/Pillow when python3 is not the correct environment.
+# Configuration: edit ../course_config.local once for non-default paths.
 
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
-python_executable="${PYTHON:-python3}"
+AFEPACK_EXAMPLES_ROOT="$(cd "$script_dir/.." && pwd)"
+source "$AFEPACK_EXAMPLES_ROOT/course_config.sh"
+python_executable="${PYTHON:-$PYTHON_BIN}"
+course_require_executable Python "$python_executable" PYTHON_BIN
 
 cd "$script_dir"
 "$python_executable" train_dqn.py "$@"

@@ -53,11 +53,8 @@ The defaults are
 ```
 
 `tianyuan_rectangle.d` is passed to EasyMesh to build the shared rectangular
-root mesh.  Override the EasyMesh executable when needed:
-
-```bash
-EASYMESH_BIN=/path/to/easymesh ./run.sh
-```
+root mesh. Configure a non-default EasyMesh executable once in the top-level
+`course_config.local`.
 
 The main outputs are:
 
@@ -91,6 +88,7 @@ That auxiliary example writes `D_left`, `D_right`, `D_common`, and
 | `run_circles.sh` | `./run_circles.sh [ROOT_MESH]` | circle peer/common meshes and `u_common.dx` in `output/` |
 | `plot_tianyuan_merge.py` | `python3 plot_tianyuan_merge.py OUTPUT_DIR` | PNG files in `OUTPUT_DIR/figures/` |
 
-Set `EASYMESH_BIN` and `PLOT_PYTHON` if auto-detection is unsuitable.
+Set `EASYMESH_BIN` and `PLOT_PYTHON` once in the top-level optional
+`course_config.local` if auto-detection is unsuitable.
 The AFEPack/OpenBLAS/Boost build and runtime variables are documented in the
 parent README.

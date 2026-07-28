@@ -12,8 +12,8 @@ manually:
 make
 ```
 
-Define `CXX`, `AFEPACK_PREFIX`, `OPENBLAS_PREFIX`, and `BOOST_INCLUDE`
-when the defaults do not match the current system. `OPENBLAS_PREFIX` and
-`BOOST_INCLUDE` default to MacPorts paths under `/opt/local`.
+Define `CXX`, `AFEPACK_PREFIX`, `OPENBLAS_PREFIX`, and `BOOST_INCLUDE` in the
+top-level optional `course_config.local` when the defaults do not match the
+current system.
 Object files and executables are build products; experiment results go to
 `../output/`.

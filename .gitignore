@@ -5,6 +5,7 @@
 **/.matplotlib/
 **/.cache/
 **/output/
+course_config.local
 
 # C/C++ build products
 *.o

@@ -8,11 +8,11 @@ small enough to edit by hand and demonstrates one geometry concept.
 Generate every example:
 
 ```bash
-EASYMESH_BIN=/path/to/easymesh ./run_examples.sh
+./run_examples.sh
 ```
 
-Use the default `$HOME/bin/easymesh` by omitting `EASYMESH_BIN`. Select another
-output directory with:
+Select a non-default EasyMesh executable in the top-level optional
+`course_config.local`. Select another output directory with:
 
 ```bash
 ./run_examples.sh /tmp/my-easymesh-output

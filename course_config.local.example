@@ -1,0 +1,24 @@
+# Optional machine-specific configuration.
+#
+# Copy this file to course_config.local, then edit only the paths needed on
+# your machine.  Keep shell/Make syntax: NAME=value, with no spaces around "=".
+
+# 1. AFEPack computation: headers, libAFEPack, templates, OpenBLAS, and Boost.
+# CXX=/usr/bin/c++
+# AFEPACK_PREFIX=/Users/your-name
+# OPENBLAS_PREFIX=/opt/local
+# BOOST_INCLUDE=/opt/local/libexec/boost/1.81/include
+# Usually derived from AFEPACK_PREFIX; uncomment only for a split installation.
+# AFEPACK_PATH=/path/to/AFEPack
+# AFEPACK_TEMPLATE_PATH=/path/to/triangle:/path/to/twin_triangle
+
+# 2. EasyMesh generation/remeshing: triangulator and AFEPack mesh converter.
+# EASYMESH_BIN=/Users/your-name/bin/easymesh
+# EASYMESH2MESH_BIN=/Users/your-name/bin/easymesh2mesh
+
+# 3. Optional Python helper/visualization environment.
+# Set ENABLE_PYTHON_PLOTS=0 to generate numerical/mesh data without PNG/GIF
+# figures in examples where plotting is optional.
+# PYTHON_BIN=/path/to/python
+# PLOT_PYTHON=/path/to/python
+# ENABLE_PYTHON_PLOTS=0

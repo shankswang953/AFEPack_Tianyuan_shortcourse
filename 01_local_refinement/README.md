@@ -133,6 +133,7 @@ The older one-point command remains available for small experiments:
 | `run.sh` | `./run.sh [ROOT_MESH] [ROUNDS] [LOCAL_FRACTION] [SCALE_B]` | meshes/CSV in `output/`, PNGs in `output/figures/` |
 | `plot_indicator_study.py` | `python3 plot_indicator_study.py OUTPUT_DIR [--scale-b FLOAT]` | three PNG files in `OUTPUT_DIR/figures/` |
 
-The shell defaults are `../common/mesh/unit_square/D 3 0.05 50`. Define
-`PLOT_PYTHON` if the plotting packages are installed in a non-default Python
-environment. Build-path variables are listed in the parent README.
+The shell defaults are `../common/mesh/unit_square/D 3 0.05 50`. Set
+`PLOT_PYTHON` in the top-level optional `course_config.local` if the plotting
+packages are installed in a non-default Python environment. Build-path
+variables are listed in the parent README.

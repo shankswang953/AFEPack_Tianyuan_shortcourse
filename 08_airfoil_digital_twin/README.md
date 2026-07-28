@@ -136,13 +136,10 @@ For the classroom demonstration, use the checked-in fixed recipe:
 
 It always resets generated state, uses master seed `2026`, and passes derived
 seeds explicitly to random transition collection, initial twin training,
-twin-assisted optimization, and online controller retraining.  PyTorch is
-restricted to deterministic CPU algorithms and one thread.  The launcher uses `$HOME/anaconda3/bin/python` when available; another
-interpreter can be selected with:
-
-```bash
-PYTHON_BIN=/path/to/python ./run_teaching_demo.sh
-```
+twin-assisted optimization, and online controller retraining. PyTorch is
+restricted to deterministic CPU algorithms and one thread. Select another
+interpreter with `PYTHON_BIN` in the top-level optional
+`course_config.local`.
 
 Every run writes `output/run_configuration.json`, containing all arguments,
 the four stage seeds, and the Python, NumPy, and PyTorch versions.  Exact action
@@ -383,12 +380,10 @@ Every Python entry point accepts `--help`. The common workflow is:
 | render | `python3 render_trajectory.py [--fps N]` or `python3 render_boundary_twin_evolution.py [OPTIONS]` | GIF/PNG files in `output/policy_rollout/` |
 | reset | `python3 reset_project.py [--clean-build]` | removes generated state described above |
 
-`run_teaching_demo.sh` uses `PYTHON_BIN` when set, then tries
-`$HOME/anaconda3/bin/python`, then `python3`; no user-specific absolute
-home path is required. Define `EASYMESH_BIN` and `EASYMESH2MESH_BIN` if the
-executables are not under `$HOME/bin`.
+`run_teaching_demo.sh` reads `PYTHON_BIN`, `EASYMESH_BIN`, and
+`EASYMESH2MESH_BIN` from the top-level optional `course_config.local`.
+Without that file, the shared configuration searches the original `$HOME/bin`
+and Anaconda locations, then the system `PATH`.
 
-The backend Makefile is portable through `CXX`, `AFEPACK_PREFIX`,
-`OPENBLAS_PREFIX`, and `BOOST_INCLUDE`. The last two still default to
-MacPorts locations under `/opt/local`, so Linux/Homebrew users normally need
-to set them. Full details are in the parent README and `backend/README.md`.
+The backend Makefile reads the same file through `course_config.mk`. Full
+details are in the parent README and `backend/README.md`.

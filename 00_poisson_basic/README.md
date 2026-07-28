@@ -31,5 +31,6 @@ The solution is written to `output/u.dx`, and the program prints the L2 error.
 `./run.sh [ROOT_MESH]` builds the example and writes `output/u.dx`.
 `ROOT_MESH` defaults to `../common/mesh/unit_square/D`. On a different
 machine, define the shared `CXX`, `AFEPACK_PREFIX`, `OPENBLAS_PREFIX`,
-`BOOST_INCLUDE`, `AFEPACK_PATH`, and `AFEPACK_TEMPLATE_PATH` variables
-described in the parent README when their defaults do not match.
+`BOOST_INCLUDE`, `AFEPACK_PATH`, and `AFEPACK_TEMPLATE_PATH` variables in the
+top-level optional `course_config.local` described in the parent README when
+their defaults do not match.

@@ -9,8 +9,8 @@ Command-line usage:
 
 Inputs are `data/initial_circle.dat` and `target_naca0012.dat`. The default
 output is `output/`, containing continuation CSV/JSON data, persistent and
-trial meshes, snapshots, and per-step `dat` files. Configure EASYMESH_BIN and
-EASYMESH2MESH_BIN when their `$HOME/bin` defaults are not valid.
+trial meshes, snapshots, and per-step `dat` files. External paths come from
+the repository-wide optional `course_config.local`.
 """
 
 from __future__ import annotations
@@ -22,8 +22,16 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+_COURSE_ROOT = Path(__file__).resolve().parents[1]
+if str(_COURSE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_COURSE_ROOT))
+from course_config import load_course_config  # noqa: E402
+
+load_course_config(_COURSE_ROOT)
 
 
 @dataclass

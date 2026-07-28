@@ -5,12 +5,13 @@
 #                 [SMOOTH_ITERATIONS] [move|smooth-only]
 # Defaults: data/naca0012.dat, output/, no moved data, 50 iterations, and move.
 # Output: persistent/current meshes, CSV/DX diagnostics, and figures in OUTPUT_DIR.
-# Configuration: define EASYMESH_BIN, EASYMESH2MESH_BIN, PLOT_PYTHON, and the
-# documented build variables when their default locations are not valid.
+# Configuration: edit ../course_config.local once for non-default paths.
 
 set -eu
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+AFEPACK_EXAMPLES_ROOT=$(CDPATH= cd -- "$script_dir/.." && pwd)
+. "$AFEPACK_EXAMPLES_ROOT/course_config.sh"
 data_file=${1:-"$script_dir/data/naca0012.dat"}
 output_dir=${2:-"$script_dir/output"}
 moved_data_file=${3:-}
@@ -18,9 +19,6 @@ smoothing_iterations=${4:-50}
 mode=${5:-move}
 current_mesh="$output_dir/mesh_current.mesh"
 current_boundary="$output_dir/boundary_current.dat"
-
-easymesh_bin=${EASYMESH_BIN:-"$HOME/bin/easymesh"}
-easymesh2mesh_bin=${EASYMESH2MESH_BIN:-"$HOME/bin/easymesh2mesh"}
 
 make -C "$script_dir"
 mkdir -p "$output_dir"
@@ -64,14 +62,16 @@ case "$mode" in
     fi
 
     if ! test -s "$current_mesh" || ! test -s "$current_boundary"; then
+      course_require_executable EasyMesh "$EASYMESH_BIN" EASYMESH_BIN
+      course_require_executable easymesh2mesh "$EASYMESH2MESH_BIN" EASYMESH2MESH_BIN
       (
         cd "$output_dir"
-        "$easymesh_bin" airfoil.d || {
+        "$EASYMESH_BIN" airfoil.d || {
           test -s airfoil.n
           test -s airfoil.e
           test -s airfoil.s
         }
-        "$easymesh2mesh_bin" airfoil airfoil.mesh
+        "$EASYMESH2MESH_BIN" airfoil airfoil.mesh
       )
       cp "$output_dir/airfoil.mesh" "$current_mesh"
       cp "$output_dir/boundary_initial.dat" "$current_boundary"
@@ -112,25 +112,13 @@ fi
   echo "persistent_mesh=$current_mesh"
 } > "$output_dir/mesh_update_mode.txt"
 
-plot_python=${PLOT_PYTHON:-}
-if test -z "$plot_python"; then
-  for candidate in python3 "$HOME/anaconda3/bin/python"; do
-    if command -v "$candidate" >/dev/null 2>&1 \
-        && "$candidate" -c "import matplotlib" >/dev/null 2>&1; then
-      plot_python=$candidate
-      break
-    fi
-  done
-fi
-
-if test -n "$plot_python"; then
+if course_python_can_plot; then
   mkdir -p "$output_dir/.matplotlib"
   MPLCONFIGDIR="$output_dir/.matplotlib" \
     XDG_CACHE_HOME="$output_dir/.cache" \
-    "$plot_python" "$script_dir/visualize_results.py" "$output_dir"
+    "$PLOT_PYTHON" "$script_dir/visualize_results.py" "$output_dir"
 else
-  echo "Matplotlib was not found; CSV and OpenDX output are still available."
-  echo "Set PLOT_PYTHON to a Python executable with matplotlib to create PNG files."
+  echo "Python plotting is unavailable or disabled; CSV/OpenDX data were generated."
 fi
 
 if test "$mode" = "smooth-only"; then

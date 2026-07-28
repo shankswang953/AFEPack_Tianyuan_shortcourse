@@ -5,24 +5,25 @@
 # All arguments are forwarded to barycentric_motion.py; run it with --help for
 # steps, smoothing, quality, relaxation, retry, and output options.
 # Output: continuation data, meshes, snapshots, PNGs, and GIFs under output/.
-# Configuration: set PYTHON_BIN, EASYMESH_BIN, EASYMESH2MESH_BIN, and the
-# documented backend build variables when their defaults are not valid.
+# Configuration: edit ../course_config.local once for non-default paths.
 
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ -n "${PYTHON_BIN:-}" ]]; then
-  python_bin="$PYTHON_BIN"
-elif [[ -x "$HOME/anaconda3/bin/python" ]]; then
-  python_bin="$HOME/anaconda3/bin/python"
-else
-  python_bin="python3"
-fi
+AFEPACK_EXAMPLES_ROOT="$(cd "$script_dir/.." && pwd)"
+source "$AFEPACK_EXAMPLES_ROOT/course_config.sh"
+course_require_executable Python "$PYTHON_BIN" PYTHON_BIN
+course_require_executable EasyMesh "$EASYMESH_BIN" EASYMESH_BIN
+course_require_executable easymesh2mesh "$EASYMESH2MESH_BIN" EASYMESH2MESH_BIN
 
 cd "$script_dir"
-"$python_bin" -B barycentric_motion.py --reset "$@"
-MPLCONFIGDIR="$script_dir/output/.matplotlib" \
-  XDG_CACHE_HOME="$script_dir/output/.cache" \
-  "$python_bin" -B plot_results.py "$script_dir/output"
+"$PYTHON_BIN" -B barycentric_motion.py --reset "$@"
+if course_python_can_plot; then
+  MPLCONFIGDIR="$script_dir/output/.matplotlib" \
+    XDG_CACHE_HOME="$script_dir/output/.cache" \
+    "$PLOT_PYTHON" -B plot_results.py "$script_dir/output"
+else
+  echo "Python plotting is unavailable or disabled; continuation data were generated." >&2
+fi
 
-echo "Barycentric continuation and figures are in $script_dir/output"
+echo "Barycentric continuation output is in $script_dir/output"

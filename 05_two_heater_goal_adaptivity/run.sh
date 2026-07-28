@@ -4,12 +4,13 @@
 # Usage: ./run.sh [ROOT_MESH] [--rounds N | --comparison-rounds R [U] D]
 # ROOT_MESH defaults to ../common/mesh/unit_square/D.
 # Output: output/ by default; round/comparison modes use named subdirectories.
-# Configuration: set the documented AFEPack build/runtime variables when their
-# default $HOME and /opt/local locations do not match the current system.
+# Configuration: edit ../course_config.local once for non-default paths.
 
 set -eu
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+AFEPACK_EXAMPLES_ROOT=$(CDPATH= cd -- "$script_dir/.." && pwd)
+. "$AFEPACK_EXAMPLES_ROOT/course_config.sh"
 root_mesh=${1:-"$script_dir/../common/mesh/unit_square/D"}
 if [ "$#" -gt 0 ]; then
   shift
@@ -34,8 +35,6 @@ fi
 mkdir -p "$output_dir"
 cd "$output_dir"
 
-AFEPACK_PATH="${AFEPACK_PATH:-$HOME/include/AFEPack}" \
-AFEPACK_TEMPLATE_PATH="${AFEPACK_TEMPLATE_PATH:-$HOME/include/AFEPack/template/triangle:$HOME/include/AFEPack/template/twin_triangle}" \
-  "$script_dir/main" "$root_mesh" "$@"
+"$script_dir/main" "$root_mesh" "$@"
 
 echo "Outputs are in $output_dir"

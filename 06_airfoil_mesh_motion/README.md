@@ -243,11 +243,8 @@ To regenerate only the figures without rerunning EasyMesh or AFEPack:
 python3 visualize_results.py output
 ```
 
-If Matplotlib belongs to a different Python environment:
-
-```bash
-PLOT_PYTHON=/path/to/python ./run.sh
-```
+If Matplotlib belongs to a different Python environment, set `PLOT_PYTHON`
+once in the top-level optional `course_config.local`.
 
 The `.dx` files can additionally be opened in an OpenDX-compatible viewer.
 
@@ -260,7 +257,7 @@ The `.dx` files can additionally be opened in an OpenDX-compatible viewer.
 | `run.sh` | `./run.sh [DATA_FILE] [OUTPUT_DIR] [MOVED_DATA_FILE] [SMOOTH_ITERATIONS] [move|smooth-only]` | meshes, CSV/DX diagnostics, and figures in `OUTPUT_DIR` |
 | `visualize_results.py` | `python3 visualize_results.py OUTPUT_DIR [--figure-dir DIR]` | PNG files in the selected figure directory |
 
-Set `EASYMESH_BIN`, `EASYMESH2MESH_BIN`, and `PLOT_PYTHON` if those tools
-are not discoverable at their defaults. The backend build also uses the shared
-`CXX`, `AFEPACK_PREFIX`, `OPENBLAS_PREFIX`, and `BOOST_INCLUDE`
-variables documented in the parent README.
+Set `EASYMESH_BIN`, `EASYMESH2MESH_BIN`, and `PLOT_PYTHON` in the top-level
+optional `course_config.local` if those tools are not discovered. The backend
+build also uses the shared `CXX`, `AFEPACK_PREFIX`, `OPENBLAS_PREFIX`, and
+`BOOST_INCLUDE` variables documented in the parent README.

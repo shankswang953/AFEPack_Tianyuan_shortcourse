@@ -124,6 +124,6 @@ the same physical scale.
 `output/` and four coordinate-search sweeps; all history, fields, meshes, and
 iteration directories stay below `OUTPUT_DIR`.
 
-Set `EASYMESH_BIN` and the shared AFEPack/OpenBLAS/Boost build/runtime
-variables from the parent README when the supplied `$HOME` and
+Set `EASYMESH_BIN` and the shared AFEPack/OpenBLAS/Boost build/runtime paths in
+the top-level optional `course_config.local` when the supplied `$HOME` and
 `/opt/local` defaults do not match the current machine.

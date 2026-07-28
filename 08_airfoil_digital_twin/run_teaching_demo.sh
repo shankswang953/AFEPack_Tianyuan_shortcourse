@@ -6,22 +6,19 @@
 # to run_experiment.py; use that Python entry point to change the parameters.
 # Output: configuration, replay, models, meshes, histories, and animation under
 # output/.
-# Configuration: set PYTHON_BIN, EASYMESH_BIN, EASYMESH2MESH_BIN, and the
-# documented backend build variables when their defaults are not valid.
+# Configuration: edit ../course_config.local once for non-default paths.
 
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ -n "${PYTHON_BIN:-}" ]]; then
-  python_bin="$PYTHON_BIN"
-elif [[ -x "$HOME/anaconda3/bin/python" ]]; then
-  python_bin="$HOME/anaconda3/bin/python"
-else
-  python_bin="python3"
-fi
+AFEPACK_EXAMPLES_ROOT="$(cd "$script_dir/.." && pwd)"
+source "$AFEPACK_EXAMPLES_ROOT/course_config.sh"
+course_require_executable Python "$PYTHON_BIN" PYTHON_BIN
+course_require_executable EasyMesh "$EASYMESH_BIN" EASYMESH_BIN
+course_require_executable easymesh2mesh "$EASYMESH2MESH_BIN" EASYMESH2MESH_BIN
 
 cd "$script_dir"
-exec "$python_bin" run_experiment.py \
+exec "$PYTHON_BIN" run_experiment.py \
   --reset \
   --seed 2026 \
   --warmup-episodes 10 \

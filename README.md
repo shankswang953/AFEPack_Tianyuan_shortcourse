@@ -71,23 +71,41 @@ retested on 2026-07-27.
 | `07_poisson_shape_optimization` | `./run.sh output 4` | four coordinate-search sweeps with remeshing |
 | `08_airfoil_digital_twin` | `./run_teaching_demo.sh` | reset and run the complete seed-2026 digital-twin experiment |
 | `09_airfoil_barycentric_motion` | `./run.sh --steps 48 --smooth-iterations 0 --boundary-quality-iterations 20 --quality-floor 0.40` | fixed-topology disk-to-NACA0012 path |
-| `10_airfoil_rl_dat` | `PYTHON=python3 ./run.sh --evaluate-only --max-steps 140 --seed 2026` | reload and evaluate the saved RL checkpoint |
+| `10_airfoil_rl_dat` | `./run.sh --evaluate-only --max-steps 140 --seed 2026` | reload and evaluate the saved RL checkpoint |
 
-Use `PYTHON_BIN=/path/to/python` for examples `08` and `09`, or
-`PYTHON=/path/to/python` for example `10`, when the required Python packages
-are installed in a non-default interpreter. Full RL retraining uses
-`PYTHON=python3 ./run.sh --episodes 400 --max-steps 140 --seed 2026`.
+Full RL retraining uses
+`./run.sh --episodes 400 --max-steps 140 --seed 2026`. Select the Python
+environment once in the top-level configuration described below.
 
 <!-- script-interface -->
-## Portable configuration
+## One optional configuration file
 
 The checked-in scripts use repository-relative input and output paths. Generated
 artifacts belong in each example's `output/` directory; generated output,
 cache, and figure directories intentionally do not contain their own README.
 Every source, package, backend, test, and checked-in data directory does.
 
-The build defaults reflect the original macOS/MacPorts environment. Other users
-should define only the variables whose defaults do not match their installation:
+The defaults reflect the original macOS/MacPorts installation. On another
+machine, make one optional local file at the repository root:
+
+```bash
+cp course_config.local.example course_config.local
+```
+
+Edit only the paths that differ. `course_config.local` is ignored by Git.
+Every official `run.sh` and the Python mesh entry points read it, and every
+C++ Makefile reads the same file through `course_config.mk`.
+
+| layer | role | main settings |
+|---|---|---|
+| AFEPack computation | finite-element assembly, solves, refinement, and mesh operations | `AFEPACK_PREFIX`, `AFEPACK_PATH`, `AFEPACK_TEMPLATE_PATH`, `OPENBLAS_PREFIX`, `BOOST_INCLUDE` |
+| EasyMesh generation | initial triangulation and topology reconstruction after remeshing | `EASYMESH_BIN`, `EASYMESH2MESH_BIN` |
+| Python helper/visualization | figures, animations, and the Python-based examples 08--10 | `PYTHON_BIN`, `PLOT_PYTHON`, `ENABLE_PYTHON_PLOTS` |
+
+Python plotting is optional for the C++ examples. Set
+`ENABLE_PYTHON_PLOTS=0` to keep numerical and mesh output while skipping
+PNG/GIF generation. Python remains required for the algorithms in examples
+08--10.
 
 | variable | used by | default | define when |
 |---|---|---|---|
@@ -99,20 +117,9 @@ should define only the variables whose defaults do not match their installation:
 | `AFEPACK_TEMPLATE_PATH` | examples 00, 02--05, 07 | under `$HOME/include/AFEPack/template` | AFEPack templates are elsewhere |
 | `EASYMESH_BIN` | examples 02, 06--09 | `$HOME/bin/easymesh` | EasyMesh is elsewhere |
 | `EASYMESH2MESH_BIN` | examples 06, 08, 09 | `$HOME/bin/easymesh2mesh` | the converter is elsewhere |
-| `PLOT_PYTHON` | examples 01, 02, 06 | auto-detected | plotting packages are in another interpreter |
-| `PYTHON_BIN` | examples 08, 09 | `$HOME/anaconda3/bin/python` if present, otherwise `python3` | another Python environment is needed |
-| `PYTHON` | example 10 | `python3` | another Python environment is needed |
-
-For example:
-
-```bash
-export CXX=/usr/bin/c++
-export AFEPACK_PREFIX=/opt/afepack
-export OPENBLAS_PREFIX=/opt/openblas
-export BOOST_INCLUDE=/opt/boost/include
-export EASYMESH_BIN=/opt/easymesh/bin/easymesh
-export EASYMESH2MESH_BIN=/opt/easymesh/bin/easymesh2mesh
-```
+| `PLOT_PYTHON` | optional figure generation | auto-detected | plotting packages are in another interpreter |
+| `PYTHON_BIN` | examples 08--10 and helper scripts | `$HOME/anaconda3/bin/python` if present, otherwise `python3` | another Python environment is needed |
+| `ENABLE_PYTHON_PLOTS` | optional plotting steps | `auto` | use `0` to skip Python figures |
 
 Root-mesh paths are command-line parameters, not machine constants. Keep the
 provided `common/mesh/unit_square/D` basename or pass another EasyMesh basename

@@ -158,6 +158,7 @@ python3 barycentric_motion.py [--steps N] [--smooth-iterations N]
 python3 plot_results.py [OUTPUT_DIR] [--gif-dpi N]
 ```
 
-Set `PYTHON_BIN`, `EASYMESH_BIN`, and `EASYMESH2MESH_BIN` when their
-defaults are unsuitable. Backend build variables and the remaining output
-layout are documented in the parent README and `backend/README.md`.
+Set `PYTHON_BIN`, `EASYMESH_BIN`, and `EASYMESH2MESH_BIN` in the top-level
+optional `course_config.local` when their defaults are unsuitable. Backend
+build variables and the remaining output layout are documented in the parent
+README and `backend/README.md`.

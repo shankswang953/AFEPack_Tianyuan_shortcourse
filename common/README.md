@@ -181,3 +181,7 @@ export EASYMESH2MESH_BIN=/path/to/easymesh2mesh
 See [`mesh/README.md`](mesh/README.md) for the mesh catalog and
 [`mesh/easymesh_examples/README.md`](mesh/easymesh_examples/README.md) for
 the geometry of each runnable example.
+
+The mesh catalog also documents
+[`mesh/visualize_dx.py`](mesh/visualize_dx.py), a Matplotlib-based viewer for
+AFEPack/OpenDX mesh and scalar-field files.

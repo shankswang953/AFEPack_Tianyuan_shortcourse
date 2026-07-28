@@ -42,13 +42,17 @@ geometry and mesh files. Generated outputs stay inside each example's own
 The animations below are high-resolution presentation copies. Click an
 animation to open the corresponding example and its reproducible workflow.
 
-| mesh-aware digital twin (`08`) | fixed-topology barycentric motion (`09`) |
+| digital-twin boundary control (`08`) | digital-twin mesh evolution (`08`) |
 |---|---|
-| [![A circular obstacle is progressively controlled toward a NACA0012 target by the online digital twin.](assets/animations/digital_twin_shape_evolution.gif)](08_airfoil_digital_twin/README.md) | [![One fixed-connectivity triangular mesh moves from a circle to a NACA0012 airfoil.](assets/animations/barycentric_fixed_topology.gif)](09_airfoil_barycentric_motion/README.md) |
+| [![A circular obstacle is progressively controlled toward a NACA0012 target by the online digital twin.](assets/animations/digital_twin_shape_evolution.gif)](08_airfoil_digital_twin/README.md) | [![The real AFEPack triangular mesh follows accepted digital-twin boundary updates and remeshing events.](assets/animations/digital_twin_mesh_evolution.gif)](08_airfoil_digital_twin/README.md) |
 
-| quality-aware boundary smoothing (`09`) | pure-dat reinforcement learning (`10`) |
+| fixed-topology barycentric motion (`09`) | quality-aware boundary smoothing (`09`) |
 |---|---|
-| [![Boundary motion, equilateral targets, and quality-aware smoothing are compared during continuation.](assets/animations/barycentric_smoothing_mechanism.gif)](09_airfoil_barycentric_motion/README.md) | [![A greedy Double-DQN rollout changes a circular profile into a NACA0012 airfoil.](assets/animations/rl_shape_evolution.gif)](10_airfoil_rl_dat/README.md) |
+| [![One fixed-connectivity triangular mesh moves from a circle to a NACA0012 airfoil.](assets/animations/barycentric_fixed_topology.gif)](09_airfoil_barycentric_motion/README.md) | [![Boundary motion, equilateral targets, and quality-aware smoothing are compared during continuation.](assets/animations/barycentric_smoothing_mechanism.gif)](09_airfoil_barycentric_motion/README.md) |
+
+| pure-dat reinforcement learning (`10`) |
+|---|
+| [![A greedy Double-DQN rollout changes a circular profile into a NACA0012 airfoil.](assets/animations/rl_shape_evolution.gif)](10_airfoil_rl_dat/README.md) |
 
 ## Verified lecture commands
 

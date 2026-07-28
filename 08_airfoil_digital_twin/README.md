@@ -8,12 +8,19 @@ The initial obstacle is a radius-0.5 circle centered at `(0.5, 0)`.  The outer
 far-field circle has the same center.  The target is NACA0012.  Both shapes use
 the same fixed leading and trailing edges, `(0, 0)` and `(1, 0)`.
 
-## Result animation
+## Result animations
 
 The marker identifies each accepted real boundary update selected by the
 online digital twin. The dashed curve is the fixed NACA0012 target.
 
 ![High-resolution online digital-twin airfoil-control rollout.](../assets/animations/digital_twin_shape_evolution.gif)
+
+The mesh view reconstructs the real AFEPack triangular mesh after each
+selected accepted update. It includes the frames immediately before and after
+every EasyMesh remeshing event, so both fixed-topology motion and topology
+changes remain visible.
+
+![High-resolution AFEPack mesh evolution during online digital-twin control.](../assets/animations/digital_twin_mesh_evolution.gif)
 
 ## What is measured
 
@@ -331,7 +338,8 @@ output/policy_rollout/boundary_twin_evolution_final.png
 For a larger single-panel view containing only the real local mesh, run:
 
 ```bash
-python3 render_boundary_twin_evolution.py --mesh-only --max-frames 41 --fps 2
+python3 render_boundary_twin_evolution.py \
+  --mesh-only --max-frames 41 --fps 2 --gif-dpi 200
 ```
 
 This writes `boundary_mesh_evolution.gif` and its final PNG beside the

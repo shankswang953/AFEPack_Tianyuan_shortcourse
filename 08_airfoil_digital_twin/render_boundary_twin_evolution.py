@@ -4,7 +4,8 @@
 
 Command-line usage:
     python3 render_boundary_twin_evolution.py [--max-frames N] [--fps N]
-        [--episode N] [--output FILE] [--rebuild-mesh-cache] [--mesh-only]
+        [--gif-dpi N] [--episode N] [--output FILE]
+        [--rebuild-mesh-cache] [--mesh-only]
 
 Requires `output/policy_rollout/data_history.csv` and `output/replay.jsonl`.
 The default outputs are `output/policy_rollout/boundary_twin_evolution.gif`
@@ -65,6 +66,12 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument("--fps", type=int, default=2)
     parser.add_argument(
+        "--gif-dpi",
+        type=int,
+        default=200,
+        help="GIF resolution in dots per inch (default: 200)",
+    )
+    parser.add_argument(
         "--episode",
         type=int,
         default=None,
@@ -91,6 +98,8 @@ def parse_arguments() -> argparse.Namespace:
         raise SystemExit("--max-frames must be at least two")
     if arguments.fps < 1:
         raise SystemExit("--fps must be positive")
+    if arguments.gif_dpi < 1:
+        raise SystemExit("--gif-dpi must be positive")
     return arguments
 
 
@@ -605,6 +614,7 @@ def render_mesh_only(
     animation_file: Path,
     final_figure: Path,
     fps: int,
+    animation_dpi: int,
 ) -> None:
     cache_root = (
         root / "output" / "policy_rollout" / ".plot_cache"
@@ -777,7 +787,7 @@ def render_mesh_only(
     animation.save(
         animation_file,
         writer=PillowWriter(fps=fps),
-        dpi=120,
+        dpi=animation_dpi,
     )
     draw(len(selected_frames) - 1)
     figure.savefig(
@@ -798,6 +808,7 @@ def render(
     animation_file: Path,
     final_figure: Path,
     fps: int,
+    animation_dpi: int,
 ) -> None:
     cache_root = (
         root / "output" / "policy_rollout" / ".plot_cache"
@@ -1044,7 +1055,7 @@ def render(
     animation.save(
         animation_file,
         writer=PillowWriter(fps=fps),
-        dpi=110,
+        dpi=animation_dpi,
     )
     draw(len(snapshots) - 1)
     figure.savefig(
@@ -1129,6 +1140,7 @@ def main() -> None:
             animation_file=animation_file,
             final_figure=final_figure,
             fps=arguments.fps,
+            animation_dpi=arguments.gif_dpi,
         )
     else:
         centers, snapshots = reconstruct_snapshots(
@@ -1148,6 +1160,7 @@ def main() -> None:
             animation_file=animation_file,
             final_figure=final_figure,
             fps=arguments.fps,
+            animation_dpi=arguments.gif_dpi,
         )
     print(f"controller episode: {episode}")
     print(f"rendered snapshots: {len(selected_frames)}")

@@ -22,6 +22,19 @@ This is not an optimal-transport barycenter: correspondence is already supplied
 by the shared `x` grid, so an OT solve would add complexity without changing
 the teaching point.
 
+## Result animations
+
+The first animation follows all 1,781 nodes while retaining one connectivity
+throughout the circle-to-NACA0012 path.
+
+![High-resolution fixed-topology triangular-mesh deformation.](../assets/animations/barycentric_fixed_topology.gif)
+
+The second animation exposes the three operations at each continuation stage:
+boundary motion, equilateral third-vertex targets, and accepted
+quality-improving smoothing.
+
+![High-resolution comparison of boundary motion, geometric targets, and quality-aware smoothing.](../assets/animations/barycentric_smoothing_mechanism.gif)
+
 ## Algorithm
 
 1. Fit the circular data with the extracted Bezier implementation.
@@ -132,7 +145,7 @@ forwards all options to `barycentric_motion.py`, and renders the default
 python3 barycentric_motion.py [--steps N] [--smooth-iterations N]
     [--boundary-quality-iterations N] [--relaxation FLOAT]
     [--quality-floor FLOAT] [--max-halvings N] [--reset] [--output DIR]
-python3 plot_results.py [OUTPUT_DIR]
+python3 plot_results.py [OUTPUT_DIR] [--gif-dpi N]
 ```
 
 Set `PYTHON_BIN`, `EASYMESH_BIN`, and `EASYMESH2MESH_BIN` when their

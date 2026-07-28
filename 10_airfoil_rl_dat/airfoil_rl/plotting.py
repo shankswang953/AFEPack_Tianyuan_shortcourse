@@ -109,6 +109,7 @@ def render_rollout(
     loss_figure: Path,
     fps: int = 3,
     maximum_frames: int = 61,
+    animation_dpi: int = 180,
 ) -> None:
     cache = animation_file.parent / ".cache"
     cache.mkdir(parents=True, exist_ok=True)
@@ -242,7 +243,7 @@ def render_rollout(
     animation.save(
         animation_file,
         writer=PillowWriter(fps=fps),
-        dpi=120,
+        dpi=animation_dpi,
     )
     draw(len(selected) - 1)
     figure.savefig(

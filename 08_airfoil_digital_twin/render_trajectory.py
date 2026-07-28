@@ -3,7 +3,7 @@
 """Regenerate the saved policy-rollout animation from its CSV history.
 
 Command-line usage:
-    python3 render_trajectory.py [--fps N]
+    python3 render_trajectory.py [--fps N] [--gif-dpi N]
 
 Reads `output/policy_rollout/data_history.csv` and the target airfoil data.
 Writes `shape_evolution.gif` and `shape_final.png` in the same rollout
@@ -21,7 +21,17 @@ from dt_airfoil.trajectory import render_trajectory
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--fps", type=int, default=2)
+    parser.add_argument(
+        "--gif-dpi",
+        type=int,
+        default=200,
+        help="GIF resolution in dots per inch (default: 200)",
+    )
     arguments = parser.parse_args()
+    if arguments.fps < 1:
+        raise SystemExit("--fps must be positive")
+    if arguments.gif_dpi < 1:
+        raise SystemExit("--gif-dpi must be positive")
 
     root = Path(__file__).resolve().parent
     rollout = root / "output" / "policy_rollout"
@@ -36,6 +46,7 @@ def main() -> None:
         animation,
         final_figure,
         frames_per_second=arguments.fps,
+        animation_dpi=arguments.gif_dpi,
     )
     print(f"history:   {history}")
     print(f"animation: {animation}")
@@ -44,4 +55,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

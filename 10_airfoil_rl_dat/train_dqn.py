@@ -5,7 +5,7 @@
 Command-line usage:
     python3 train_dqn.py [--episodes N] [--max-steps N] [--seed N]
         [--batch-size N] [--warmup N] [--train-every N]
-        [--terminal-loss FLOAT] [--fps N] [--evaluate-only]
+        [--terminal-loss FLOAT] [--fps N] [--gif-dpi N] [--evaluate-only]
 
 Reads `data/target_naca0012.dat`. Training/evaluation artifacts are written
 below `output/`, including the best checkpoint, configuration, training CSV
@@ -55,6 +55,12 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--terminal-loss", type=float, default=2.0e-6)
     parser.add_argument("--fps", type=int, default=3)
     parser.add_argument(
+        "--gif-dpi",
+        type=int,
+        default=180,
+        help="GIF resolution in dots per inch (default: 180)",
+    )
+    parser.add_argument(
         "--evaluate-only",
         action="store_true",
         help="load output/checkpoints/dqn_best.pt and render one rollout",
@@ -64,6 +70,10 @@ def parse_arguments() -> argparse.Namespace:
         raise SystemExit("--episodes must be positive")
     if arguments.max_steps < 1:
         raise SystemExit("--max-steps must be positive")
+    if arguments.fps < 1:
+        raise SystemExit("--fps must be positive")
+    if arguments.gif_dpi < 1:
+        raise SystemExit("--gif-dpi must be positive")
     return arguments
 
 
@@ -266,6 +276,7 @@ def main() -> None:
         final_figure=evaluation / "final_shape.png",
         loss_figure=evaluation / "loss_history.png",
         fps=arguments.fps,
+        animation_dpi=arguments.gif_dpi,
     )
     configuration = {
         "seed": arguments.seed,

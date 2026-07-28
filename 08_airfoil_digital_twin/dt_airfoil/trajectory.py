@@ -190,6 +190,7 @@ def render_trajectory(
     final_figure: Path,
     *,
     frames_per_second: int = 2,
+    animation_dpi: int = 200,
 ) -> None:
     """Create a GIF and a final PNG from the recorded CSV."""
 
@@ -338,7 +339,7 @@ def render_trajectory(
     animation.save(
         animation_file,
         writer=PillowWriter(fps=max(1, frames_per_second)),
-        dpi=150,
+        dpi=animation_dpi,
     )
     draw(len(frames) - 1)
     figure.savefig(

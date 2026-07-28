@@ -3,7 +3,7 @@
 """Plot and animate the barycentric fixed-topology mesh-motion results.
 
 Command-line usage:
-    python3 plot_results.py [OUTPUT_DIR]
+    python3 plot_results.py [OUTPUT_DIR] [--gif-dpi N]
 
 OUTPUT_DIR defaults to `output`. The script reads `continuation.csv` and
 `snapshots/`, then writes PNG and GIF teaching artifacts below
@@ -416,6 +416,7 @@ def animate_smoothing_mechanism(
     figure_dir: Path,
     snapshot_dir: Path,
     history: list[dict[str, str]],
+    gif_dpi: int,
 ) -> None:
     figure, axes = plt.subplots(
         1,
@@ -427,7 +428,7 @@ def animate_smoothing_mechanism(
     with writer.saving(
         figure,
         figure_dir / "barycentric_smoothing_mechanism.gif",
-        dpi=105,
+        dpi=gif_dpi,
     ):
         for row in history:
             prefix = snapshot_prefix(snapshot_dir, row)
@@ -489,6 +490,7 @@ def animate_mesh(
     figure_dir: Path,
     snapshot_dir: Path,
     history: list[dict[str, str]],
+    gif_dpi: int,
 ) -> None:
     first_prefix = snapshot_prefix(snapshot_dir, history[0])
     elements = read_elements(Path(str(first_prefix) + "_elements.csv"))
@@ -505,7 +507,7 @@ def animate_mesh(
     with writer.saving(
         figure,
         figure_dir / "barycentric_fixed_topology.gif",
-        dpi=130,
+        dpi=gif_dpi,
     ):
         for row in history:
             prefix = snapshot_prefix(snapshot_dir, row)
@@ -524,7 +526,15 @@ def animate_mesh(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path, nargs="?", default=Path("output"))
+    parser.add_argument(
+        "--gif-dpi",
+        type=int,
+        default=150,
+        help="GIF resolution in dots per inch (default: 150)",
+    )
     arguments = parser.parse_args()
+    if arguments.gif_dpi < 1:
+        parser.error("--gif-dpi must be positive")
     output = arguments.output.resolve()
     history = rows(output / "continuation.csv")
     snapshot_dir = output / "snapshots"
@@ -548,8 +558,18 @@ def main() -> None:
     plot_mesh_path(figure_dir, snapshot_dir, selected)
     plot_quality(figure_dir, history)
     plot_boundary_quality_comparison(figure_dir, snapshot_dir, history[-1])
-    animate_smoothing_mechanism(figure_dir, snapshot_dir, history)
-    animate_mesh(figure_dir, snapshot_dir, history)
+    animate_smoothing_mechanism(
+        figure_dir,
+        snapshot_dir,
+        history,
+        arguments.gif_dpi,
+    )
+    animate_mesh(
+        figure_dir,
+        snapshot_dir,
+        history,
+        arguments.gif_dpi,
+    )
     print(f"figures: {figure_dir}")
 
 

@@ -4,6 +4,13 @@ This example turns the circle-to-NACA0012 shape-matching problem into a small,
 reproducible reinforcement-learning problem.  It deliberately does **not** call
 AFEPack, EasyMesh, a mesh smoother, or a CFD solver.
 
+## Result animation
+
+The animation shows the greedy saved-policy rollout. The diamond marks the
+Gaussian action selected at each step.
+
+![High-resolution Double-DQN airfoil shape-evolution rollout.](../assets/animations/rl_shape_evolution.gif)
+
 ## RL problem
 
 The state is the difference between the current and target movable ordinates:
@@ -112,7 +119,7 @@ python3 -m unittest discover -s tests -v
 ```text
 python3 train_dqn.py [--episodes N] [--max-steps N] [--seed N]
     [--batch-size N] [--warmup N] [--train-every N]
-    [--terminal-loss FLOAT] [--fps N] [--evaluate-only]
+    [--terminal-loss FLOAT] [--fps N] [--gif-dpi N] [--evaluate-only]
 ```
 
 All artifacts remain below `output/`; evaluate-only mode reads

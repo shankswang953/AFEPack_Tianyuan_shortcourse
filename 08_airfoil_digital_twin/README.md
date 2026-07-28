@@ -8,6 +8,13 @@ The initial obstacle is a radius-0.5 circle centered at `(0.5, 0)`.  The outer
 far-field circle has the same center.  The target is NACA0012.  Both shapes use
 the same fixed leading and trailing edges, `(0, 0)` and `(1, 0)`.
 
+## Result animation
+
+The marker identifies each accepted real boundary update selected by the
+online digital twin. The dashed curve is the fixed NACA0012 target.
+
+![High-resolution online digital-twin airfoil-control rollout.](../assets/animations/digital_twin_shape_evolution.gif)
+
 ## What is measured
 
 The current and target UIUC-style `dat` files use the same fixed x-grid.  The
@@ -294,10 +301,11 @@ output/policy_rollout/shape_evolution.gif
 output/policy_rollout/shape_final.png
 ```
 
-The animation can be regenerated without rerunning the optimizer:
+The animation can be regenerated at the README resolution without rerunning
+the optimizer:
 
 ```bash
-python3 render_trajectory.py --fps 2
+python3 render_trajectory.py --fps 2 --gif-dpi 200
 ```
 
 To show the real boundary and the online digital-twin update together, run:

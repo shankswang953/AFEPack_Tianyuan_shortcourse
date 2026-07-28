@@ -37,6 +37,19 @@ Examples `00`--`05` use the EasyMesh input
 geometry and mesh files. Generated outputs stay inside each example's own
 `output/` directory.
 
+## Selected result animations
+
+The animations below are high-resolution presentation copies. Click an
+animation to open the corresponding example and its reproducible workflow.
+
+| mesh-aware digital twin (`08`) | fixed-topology barycentric motion (`09`) |
+|---|---|
+| [![A circular obstacle is progressively controlled toward a NACA0012 target by the online digital twin.](assets/animations/digital_twin_shape_evolution.gif)](08_airfoil_digital_twin/README.md) | [![One fixed-connectivity triangular mesh moves from a circle to a NACA0012 airfoil.](assets/animations/barycentric_fixed_topology.gif)](09_airfoil_barycentric_motion/README.md) |
+
+| quality-aware boundary smoothing (`09`) | pure-dat reinforcement learning (`10`) |
+|---|---|
+| [![Boundary motion, equilateral targets, and quality-aware smoothing are compared during continuation.](assets/animations/barycentric_smoothing_mechanism.gif)](09_airfoil_barycentric_motion/README.md) | [![A greedy Double-DQN rollout changes a circular profile into a NACA0012 airfoil.](assets/animations/rl_shape_evolution.gif)](10_airfoil_rl_dat/README.md) |
+
 ## Verified lecture commands
 
 Run each command from the named example directory. The commands below were

@@ -610,7 +610,6 @@ def render_mesh_only(
     trajectories: list[TrajectoryFrame],
     selected_frames: list[int],
     mesh_states: dict[int, tuple[np.ndarray, np.ndarray]],
-    target_file: Path,
     animation_file: Path,
     final_figure: Path,
     fps: int,
@@ -632,14 +631,10 @@ def render_mesh_only(
     from matplotlib.animation import FuncAnimation, PillowWriter
     from matplotlib.collections import LineCollection
 
-    target = read_airfoil(target_file)
     animation_file.parent.mkdir(parents=True, exist_ok=True)
     final_figure.parent.mkdir(parents=True, exist_ok=True)
 
-    navy = "#17324D"
     blue = "#2F6B9A"
-    teal = "#2A9D8F"
-    red = "#D95D4F"
 
     plt.rcParams.update(
         {
@@ -670,61 +665,6 @@ def render_mesh_only(
         zorder=1,
     )
     axis.add_collection(mesh_collection)
-    target_upper, = axis.plot(
-        [point.x for point in target.upper],
-        [point.y for point in target.upper],
-        color=teal,
-        linewidth=2.3,
-        linestyle="--",
-        label="target",
-        zorder=3,
-    )
-    axis.plot(
-        [point.x for point in target.lower],
-        [point.y for point in target.lower],
-        color=teal,
-        linewidth=2.3,
-        linestyle="--",
-        zorder=3,
-    )
-    current_upper, = axis.plot(
-        [],
-        [],
-        color=navy,
-        linewidth=2.9,
-        label="current",
-        zorder=4,
-    )
-    current_lower, = axis.plot(
-        [],
-        [],
-        color=navy,
-        linewidth=2.9,
-        zorder=4,
-    )
-    accepted_marker, = axis.plot(
-        [],
-        [],
-        marker="D",
-        markersize=7,
-        linestyle="None",
-        color=red,
-        label="last accepted update",
-        zorder=5,
-    )
-    status = axis.text(
-        0.02,
-        0.03,
-        "",
-        transform=axis.transAxes,
-        color=navy,
-        va="bottom",
-    )
-    axis.legend(
-        handles=[current_upper, target_upper, accepted_marker],
-        loc="upper right",
-        frameon=False,
-    )
     title = axis.set_title("")
 
     def draw(frame_number: int):
@@ -734,44 +674,9 @@ def render_mesh_only(
         mesh_collection.set_segments(
             local_mesh_segments(nodes, elements)
         )
-        current_upper.set_data(frame.upper_x, frame.upper_y)
-        current_lower.set_data(frame.lower_x, frame.lower_y)
-        if frame.action is None:
-            accepted_marker.set_data([], [])
-        else:
-            x_values = np.asarray(
-                frame.upper_x
-                if frame.action.surface == "U"
-                else frame.lower_x
-            )
-            y_values = np.asarray(
-                frame.upper_y
-                if frame.action.surface == "U"
-                else frame.lower_y
-            )
-            accepted_marker.set_data(
-                [frame.action.center],
-                [
-                    float(
-                        np.interp(
-                            frame.action.center,
-                            x_values,
-                            y_values,
-                        )
-                    )
-                ],
-            )
-        status.set_text(frame.source)
-        title.set_text(
-            f"Accepted step {frame.accepted_step}  |  "
-            f"data MSE = {frame.loss:.3e}"
-        )
+        title.set_text(f"Accepted step {frame.accepted_step}")
         return (
             mesh_collection,
-            current_upper,
-            current_lower,
-            accepted_marker,
-            status,
             title,
         )
 
@@ -1136,7 +1041,6 @@ def main() -> None:
             trajectories=trajectories,
             selected_frames=selected_frames,
             mesh_states=mesh_states,
-            target_file=target_file,
             animation_file=animation_file,
             final_figure=final_figure,
             fps=arguments.fps,

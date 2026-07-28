@@ -350,7 +350,9 @@ python3 render_boundary_twin_evolution.py \
 ```
 
 This writes `boundary_mesh_evolution.gif` and its final PNG beside the
-two-panel animation.
+two-panel animation.  Mesh-only mode draws only the triangular mesh edges:
+the current/target airfoil curves, accepted-action marker, status annotation,
+and legend are omitted.
 
 Generated meshes, replay data, checkpoints, and accepted shape histories are
 written below `output/` and are ignored by Git.

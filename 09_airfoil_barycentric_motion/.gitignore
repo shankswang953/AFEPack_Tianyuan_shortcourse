@@ -1,0 +1,6 @@
+output/
+backend/*.o
+backend/generate_airfoil_geometry
+backend/move_and_smooth
+__pycache__/
+*.pyc

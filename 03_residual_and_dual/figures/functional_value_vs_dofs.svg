@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520">
+<rect width="800" height="520" fill="white"/>
+<text x="400" y="32" text-anchor="middle" font-family="sans-serif" font-size="21">Target functional versus degrees of freedom</text>
+<line x1="80" y1="440" x2="730" y2="440" stroke="#374151"/>
+<line x1="80" y1="90" x2="80" y2="440" stroke="#374151"/>
+<line x1="80" y1="440" x2="80" y2="446" stroke="#374151"/>
+<text x="80" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">506</text>
+<line x1="74" y1="440" x2="80" y2="440" stroke="#374151"/>
+<text x="68" y="444" text-anchor="end" font-family="sans-serif" font-size="12">0.91411</text>
+<line x1="209.75518" y1="440" x2="209.75518" y2="446" stroke="#374151"/>
+<text x="209.75518" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">612</text>
+<line x1="74" y1="370.00000" x2="80" y2="370.00000" stroke="#374151"/>
+<text x="68" y="374.00000" text-anchor="end" font-family="sans-serif" font-size="12">0.91411</text>
+<line x1="339.51036" y1="440" x2="339.51036" y2="446" stroke="#374151"/>
+<text x="339.51036" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">718</text>
+<line x1="74" y1="300.00000" x2="80" y2="300.00000" stroke="#374151"/>
+<text x="68" y="304.00000" text-anchor="end" font-family="sans-serif" font-size="12">0.91411</text>
+<line x1="470.48964" y1="440" x2="470.48964" y2="446" stroke="#374151"/>
+<text x="470.48964" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">825</text>
+<line x1="74" y1="230.00000" x2="80" y2="230.00000" stroke="#374151"/>
+<text x="68" y="234.00000" text-anchor="end" font-family="sans-serif" font-size="12">0.91411</text>
+<line x1="600.24482" y1="440" x2="600.24482" y2="446" stroke="#374151"/>
+<text x="600.24482" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">931</text>
+<line x1="74" y1="160.00000" x2="80" y2="160.00000" stroke="#374151"/>
+<text x="68" y="164.00000" text-anchor="end" font-family="sans-serif" font-size="12">0.91411</text>
+<line x1="730.00000" y1="440" x2="730.00000" y2="446" stroke="#374151"/>
+<text x="730.00000" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">1037</text>
+<line x1="74" y1="90.00000" x2="80" y2="90.00000" stroke="#374151"/>
+<text x="68" y="94.00000" text-anchor="end" font-family="sans-serif" font-size="12">0.91412</text>
+<text x="725" y="84" text-anchor="end" font-family="sans-serif" font-size="11">spectral reference J = 0.91411001 (outside vertical scale)</text>
+<line x1="80.00000000" y1="399.61538462" x2="130.18832392" y2="337.59433559" stroke="#d97706" stroke-width="3"/>
+<line x1="130.18832392" y1="337.59433559" x2="221.99623352" y2="376.14688617" stroke="#d97706" stroke-width="3"/>
+<line x1="221.99623352" y1="376.14688617" x2="392.14689266" y2="177.21346720" stroke="#d97706" stroke-width="3"/>
+<line x1="392.14689266" y1="177.21346720" x2="730.00000000" y2="130.38461538" stroke="#d97706" stroke-width="3"/>
+<circle cx="80.00000000" cy="399.61538462" r="5" fill="#d97706"/>
+<circle cx="130.18832392" cy="337.59433559" r="5" fill="#d97706"/>
+<circle cx="221.99623352" cy="376.14688617" r="5" fill="#d97706"/>
+<circle cx="392.14689266" cy="177.21346720" r="5" fill="#d97706"/>
+<circle cx="730.00000000" cy="130.38461538" r="5" fill="#d97706"/>
+<line x1="80.00000000" y1="399.61538462" x2="124.06779661" y2="132.26792392" stroke="#0f766e" stroke-width="3"/>
+<line x1="124.06779661" y1="132.26792392" x2="228.11676083" y2="198.44037014" stroke="#0f766e" stroke-width="3"/>
+<line x1="228.11676083" y1="198.44037014" x2="397.04331450" y2="196.55490744" stroke="#0f766e" stroke-width="3"/>
+<line x1="397.04331450" y1="196.55490744" x2="717.75894539" y2="196.43034222" stroke="#0f766e" stroke-width="3"/>
+<rect x="75.50000000" y="395.11538462" width="9" height="9" fill="#0f766e"/>
+<rect x="119.56779661" y="127.76792392" width="9" height="9" fill="#0f766e"/>
+<rect x="223.61676083" y="193.94037014" width="9" height="9" fill="#0f766e"/>
+<rect x="392.54331450" y="192.05490744" width="9" height="9" fill="#0f766e"/>
+<rect x="713.25894539" y="191.93034222" width="9" height="9" fill="#0f766e"/>
+<line x1="80.00000000" y1="399.61538462" x2="135.08474576" y2="317.54472618" stroke="#7c3aed" stroke-width="3"/>
+<polygon points="80.00000000,394.11538462 75.00000000,404.11538462 85.00000000,404.11538462" fill="#7c3aed"/>
+<polygon points="135.08474576,312.04472618 130.08474576,322.04472618 140.08474576,322.04472618" fill="#7c3aed"/>
+<circle cx="115" cy="62" r="5" fill="#d97706"/>
+<text x="128" y="66" font-family="sans-serif" font-size="13">residual refinement</text>
+<rect x="295" y="57" width="10" height="10" fill="#0f766e"/>
+<text x="313" y="66" font-family="sans-serif" font-size="13">dual-magnitude refinement</text>
+<polygon points="585,56 580,66 590,66" fill="#7c3aed"/>
+<text x="598" y="66" font-family="sans-serif" font-size="13">DWR refinement</text>
+<text x="405" y="500" text-anchor="middle" font-family="sans-serif" font-size="14">degrees of freedom</text>
+<text x="18" y="270" text-anchor="middle" font-family="sans-serif" font-size="14" transform="rotate(-90 18 270)">J(T_h)</text>
+</svg>

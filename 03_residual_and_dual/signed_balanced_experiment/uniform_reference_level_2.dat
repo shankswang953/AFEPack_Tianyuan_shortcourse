@@ -1,0 +1,7 @@
+# uniform refinement reference
+level 2
+elements 14880
+dofs 7601
+functional 9.14109799370278e-01
+spectral_reference 9.14110005950467e-01
+absolute_difference 2.06580188399919e-07

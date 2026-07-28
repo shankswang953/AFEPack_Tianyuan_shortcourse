@@ -1,0 +1,23 @@
+.DS_Store
+**/.DS_Store
+**/__pycache__/
+*.py[cod]
+**/.matplotlib/
+**/.cache/
+**/output/
+
+# C/C++ build products
+*.o
+main
+indicator_study
+local_refine
+poisson_solver
+mesh_merge_demo
+tianyuan_mesh_merge
+generate_airfoil_geometry
+move_and_smooth
+shape_optimization
+
+# Mutable working inputs
+**/data/*_working.dat
+**/data/working.dat

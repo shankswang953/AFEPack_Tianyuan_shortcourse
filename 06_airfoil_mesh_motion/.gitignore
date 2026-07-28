@@ -1,0 +1,5 @@
+generate_airfoil_geometry
+move_and_smooth
+*.o
+output/
+data/naca0012_working.dat

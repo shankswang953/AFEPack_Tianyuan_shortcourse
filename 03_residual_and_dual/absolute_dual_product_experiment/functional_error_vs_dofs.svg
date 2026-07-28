@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520">
+<rect width="800" height="520" fill="white"/>
+<text x="400" y="32" text-anchor="middle" font-family="sans-serif" font-size="21">Target functional error versus degrees of freedom (log scale)</text>
+<line x1="80" y1="440" x2="730" y2="440" stroke="#374151"/>
+<line x1="80" y1="90" x2="80" y2="440" stroke="#374151"/>
+<line x1="80" y1="440" x2="80" y2="446" stroke="#374151"/>
+<text x="80" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">506</text>
+<line x1="209.7551789" y1="440" x2="209.7551789" y2="446" stroke="#374151"/>
+<text x="209.7551789" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">612</text>
+<line x1="339.5103578" y1="440" x2="339.5103578" y2="446" stroke="#374151"/>
+<text x="339.5103578" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">718</text>
+<line x1="470.4896422" y1="440" x2="470.4896422" y2="446" stroke="#374151"/>
+<text x="470.4896422" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">825</text>
+<line x1="600.2448211" y1="440" x2="600.2448211" y2="446" stroke="#374151"/>
+<text x="600.2448211" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">931</text>
+<line x1="730" y1="440" x2="730" y2="446" stroke="#374151"/>
+<text x="730" y="466" text-anchor="middle" font-family="sans-serif" font-size="12">1037</text>
+<line x1="80" y1="440" x2="730" y2="440" stroke="#d1d5db" stroke-width="0.8"/>
+<text x="68" y="444" text-anchor="end" font-family="sans-serif" font-size="12">9.2e-07</text>
+<line x1="80" y1="3.7e+02" x2="730" y2="3.7e+02" stroke="#d1d5db" stroke-width="0.8"/>
+<text x="68" y="3.7e+02" text-anchor="end" font-family="sans-serif" font-size="12">1.9e-06</text>
+<line x1="80" y1="3.0e+02" x2="730" y2="3.0e+02" stroke="#d1d5db" stroke-width="0.8"/>
+<text x="68" y="3.0e+02" text-anchor="end" font-family="sans-serif" font-size="12">4.0e-06</text>
+<line x1="80" y1="2.3e+02" x2="730" y2="2.3e+02" stroke="#d1d5db" stroke-width="0.8"/>
+<text x="68" y="2.3e+02" text-anchor="end" font-family="sans-serif" font-size="12">8.3e-06</text>
+<line x1="80" y1="1.6e+02" x2="730" y2="1.6e+02" stroke="#d1d5db" stroke-width="0.8"/>
+<text x="68" y="1.6e+02" text-anchor="end" font-family="sans-serif" font-size="12">1.7e-05</text>
+<line x1="80" y1="9.0e+01" x2="730" y2="9.0e+01" stroke="#d1d5db" stroke-width="0.8"/>
+<text x="68" y="9.4e+01" text-anchor="end" font-family="sans-serif" font-size="12">3.6e-05</text>
+<line x1="80" y1="320.7828297" x2="130.1883239" y2="412.6422771" stroke="#d97706" stroke-width="3"/>
+<line x1="130.1883239" y1="412.6422771" x2="221.9962335" y2="346.2149315" stroke="#d97706" stroke-width="3"/>
+<line x1="221.9962335" y1="346.2149315" x2="392.1468927" y2="302.1633156" stroke="#d97706" stroke-width="3"/>
+<line x1="392.1468927" y1="302.1633156" x2="730" y2="271.1342792" stroke="#d97706" stroke-width="3"/>
+<circle cx="80" cy="320.7828297" r="5" fill="#d97706"/>
+<circle cx="130.1883239" cy="412.6422771" r="5" fill="#d97706"/>
+<circle cx="221.9962335" cy="346.2149315" r="5" fill="#d97706"/>
+<circle cx="392.1468927" cy="302.1633156" r="5" fill="#d97706"/>
+<circle cx="730" cy="271.1342792" r="5" fill="#d97706"/>
+<line x1="80" y1="320.7828297" x2="124.0677966" y2="272.2057415" stroke="#0f766e" stroke-width="3"/>
+<line x1="124.0677966" y1="272.2057415" x2="228.1167608" y2="320.4205495" stroke="#0f766e" stroke-width="3"/>
+<line x1="228.1167608" y1="320.4205495" x2="397.0433145" y2="318.6500264" stroke="#0f766e" stroke-width="3"/>
+<line x1="397.0433145" y1="318.6500264" x2="717.7589454" y2="318.5342025" stroke="#0f766e" stroke-width="3"/>
+<rect x="75.5" y="316.2828297" width="9" height="9" fill="#0f766e"/>
+<rect x="119.5677966" y="267.7057415" width="9" height="9" fill="#0f766e"/>
+<rect x="223.6167608" y="315.9205495" width="9" height="9" fill="#0f766e"/>
+<rect x="392.5433145" y="314.1500264" width="9" height="9" fill="#0f766e"/>
+<rect x="713.2589454" y="314.0342025" width="9" height="9" fill="#0f766e"/>
+<line x1="80" y1="320.7828297" x2="127.740113" y2="381.7114973" stroke="#7c3aed" stroke-width="3"/>
+<line x1="127.740113" y1="381.7114973" x2="177.9284369" y2="415.862069" stroke="#7c3aed" stroke-width="3"/>
+<line x1="177.9284369" y1="415.862069" x2="230.5649718" y2="226.4213816" stroke="#7c3aed" stroke-width="3"/>
+<line x1="230.5649718" y1="226.4213816" x2="277.0809793" y2="247.4227317" stroke="#7c3aed" stroke-width="3"/>
+<line x1="277.0809793" y1="247.4227317" x2="327.2693032" y2="202.319845" stroke="#7c3aed" stroke-width="3"/>
+<line x1="327.2693032" y1="202.319845" x2="392.1468927" y2="114.137931" stroke="#7c3aed" stroke-width="3"/>
+<polygon points="80,315.2828297 75,325.2828297 85,325.2828297" fill="#7c3aed"/>
+<polygon points="127.740113,376.2114973 122.740113,386.2114973 132.740113,386.2114973" fill="#7c3aed"/>
+<polygon points="177.9284369,410.362069 172.9284369,420.362069 182.9284369,420.362069" fill="#7c3aed"/>
+<polygon points="230.5649718,220.9213816 225.5649718,230.9213816 235.5649718,230.9213816" fill="#7c3aed"/>
+<polygon points="277.0809793,241.9227317 272.0809793,251.9227317 282.0809793,251.9227317" fill="#7c3aed"/>
+<polygon points="327.2693032,196.819845 322.2693032,206.819845 332.2693032,206.819845" fill="#7c3aed"/>
+<polygon points="392.1468927,108.637931 387.1468927,118.637931 397.1468927,118.637931" fill="#7c3aed"/>
+<circle cx="115" cy="62" r="5" fill="#d97706"/>
+<text x="128" y="66" font-family="sans-serif" font-size="13">residual refinement</text>
+<rect x="295" y="57" width="10" height="10" fill="#0f766e"/>
+<text x="313" y="66" font-family="sans-serif" font-size="13">dual-magnitude refinement</text>
+<polygon points="585,56 580,66 590,66" fill="#7c3aed"/>
+<text x="598" y="66" font-family="sans-serif" font-size="13">DWR refinement</text>
+<text x="405" y="500" text-anchor="middle" font-family="sans-serif" font-size="14">degrees of freedom</text>
+<text x="18" y="270" text-anchor="middle" font-family="sans-serif" font-size="14" transform="rotate(-90 18 270)">|J-J_ref|</text>
+</svg>

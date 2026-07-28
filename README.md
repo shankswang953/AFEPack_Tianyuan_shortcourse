@@ -1,5 +1,67 @@
 # AFEPack course examples
 
+<!-- script-interface -->
+## First-time setup: configure paths once
+
+If the built-in macOS/MacPorts defaults already match your machine, no setup
+is needed. Otherwise, before running any example, create one machine-local
+configuration file at the repository root:
+
+```bash
+cp course_config.local.example course_config.local
+```
+
+Open `course_config.local` and uncomment only the paths that differ on your
+machine. For example:
+
+```text
+AFEPACK_PREFIX=/opt/afepack
+OPENBLAS_PREFIX=/opt/openblas
+BOOST_INCLUDE=/opt/boost/include
+EASYMESH_BIN=/opt/easymesh/bin/easymesh
+EASYMESH2MESH_BIN=/opt/easymesh/bin/easymesh2mesh
+PYTHON_BIN=/path/to/python
+```
+
+Keep the `NAME=value` form with no spaces around `=`. Do not edit
+`course_config.sh`, `course_config.mk`, or `course_config.py`: they are the
+shared loaders. `course_config.local` is ignored by Git, while
+`course_config.local.example` remains the portable template distributed with
+the course.
+
+Every official `run.sh` and the Python mesh entry points automatically read
+`course_config.local`; every C++ Makefile reads the same file through
+`course_config.mk`.
+
+| layer | role | main settings |
+|---|---|---|
+| AFEPack computation | finite-element assembly, solves, refinement, and mesh operations | `AFEPACK_PREFIX`, `AFEPACK_PATH`, `AFEPACK_TEMPLATE_PATH`, `OPENBLAS_PREFIX`, `BOOST_INCLUDE` |
+| EasyMesh generation | initial triangulation and topology reconstruction after remeshing | `EASYMESH_BIN`, `EASYMESH2MESH_BIN` |
+| Python helper/visualization | figures, animations, and the Python-based examples 08--10 | `PYTHON_BIN`, `PLOT_PYTHON`, `ENABLE_PYTHON_PLOTS` |
+
+Python plotting is optional for the C++ examples. Set
+`ENABLE_PYTHON_PLOTS=0` to keep numerical and mesh output while skipping
+PNG/GIF generation. Python remains required for the algorithms in examples
+08--10.
+
+| variable | default | define when |
+|---|---|---|
+| `CXX` | Make's C++ compiler | a different C++20 compiler is required |
+| `AFEPACK_PREFIX` | `$HOME` | AFEPack headers/libraries use another prefix |
+| `OPENBLAS_PREFIX` | `/opt/local` | OpenBLAS is not installed by MacPorts |
+| `BOOST_INCLUDE` | `/opt/local/libexec/boost/1.81/include` | Boost headers are elsewhere |
+| `AFEPACK_PATH` | `$HOME/include/AFEPack` | AFEPack runtime data are elsewhere |
+| `AFEPACK_TEMPLATE_PATH` | under `$HOME/include/AFEPack/template` | AFEPack templates are elsewhere |
+| `EASYMESH_BIN` | `$HOME/bin/easymesh`, then `PATH` | EasyMesh is elsewhere |
+| `EASYMESH2MESH_BIN` | `$HOME/bin/easymesh2mesh`, then `PATH` | the converter is elsewhere |
+| `PLOT_PYTHON` | derived from `PYTHON_BIN` | plotting packages are in another interpreter |
+| `PYTHON_BIN` | `$HOME/anaconda3/bin/python`, then `PATH` | another Python environment is needed |
+| `ENABLE_PYTHON_PLOTS` | `auto` | use `0` to skip Python figures |
+
+Root-mesh paths are command-line parameters, not machine constants. Keep the
+provided `common/mesh/unit_square/D` basename or pass another EasyMesh basename
+without the `.n`, `.e`, or `.s` suffix.
+
 The examples are ordered by the concepts introduced in the short course:
 
 1. `00_poisson_basic`: assemble and solve a conforming P1 Poisson problem.
@@ -75,52 +137,4 @@ retested on 2026-07-27.
 
 Full RL retraining uses
 `./run.sh --episodes 400 --max-steps 140 --seed 2026`. Select the Python
-environment once in the top-level configuration described below.
-
-<!-- script-interface -->
-## One optional configuration file
-
-The checked-in scripts use repository-relative input and output paths. Generated
-artifacts belong in each example's `output/` directory; generated output,
-cache, and figure directories intentionally do not contain their own README.
-Every source, package, backend, test, and checked-in data directory does.
-
-The defaults reflect the original macOS/MacPorts installation. On another
-machine, make one optional local file at the repository root:
-
-```bash
-cp course_config.local.example course_config.local
-```
-
-Edit only the paths that differ. `course_config.local` is ignored by Git.
-Every official `run.sh` and the Python mesh entry points read it, and every
-C++ Makefile reads the same file through `course_config.mk`.
-
-| layer | role | main settings |
-|---|---|---|
-| AFEPack computation | finite-element assembly, solves, refinement, and mesh operations | `AFEPACK_PREFIX`, `AFEPACK_PATH`, `AFEPACK_TEMPLATE_PATH`, `OPENBLAS_PREFIX`, `BOOST_INCLUDE` |
-| EasyMesh generation | initial triangulation and topology reconstruction after remeshing | `EASYMESH_BIN`, `EASYMESH2MESH_BIN` |
-| Python helper/visualization | figures, animations, and the Python-based examples 08--10 | `PYTHON_BIN`, `PLOT_PYTHON`, `ENABLE_PYTHON_PLOTS` |
-
-Python plotting is optional for the C++ examples. Set
-`ENABLE_PYTHON_PLOTS=0` to keep numerical and mesh output while skipping
-PNG/GIF generation. Python remains required for the algorithms in examples
-08--10.
-
-| variable | used by | default | define when |
-|---|---|---|---|
-| `CXX` | C++ Makefiles | Make's C++ compiler | a different C++20 compiler is required |
-| `AFEPACK_PREFIX` | C++ Makefiles | `$HOME` | AFEPack headers/libraries use another prefix |
-| `OPENBLAS_PREFIX` | C++ Makefiles | `/opt/local` | OpenBLAS is not installed by MacPorts |
-| `BOOST_INCLUDE` | C++ Makefiles | `/opt/local/libexec/boost/1.81/include` | Boost headers are elsewhere |
-| `AFEPACK_PATH` | examples 00, 02--05 | `$HOME/include/AFEPack` | AFEPack runtime data are elsewhere |
-| `AFEPACK_TEMPLATE_PATH` | examples 00, 02--05, 07 | under `$HOME/include/AFEPack/template` | AFEPack templates are elsewhere |
-| `EASYMESH_BIN` | examples 02, 06--09 | `$HOME/bin/easymesh` | EasyMesh is elsewhere |
-| `EASYMESH2MESH_BIN` | examples 06, 08, 09 | `$HOME/bin/easymesh2mesh` | the converter is elsewhere |
-| `PLOT_PYTHON` | optional figure generation | auto-detected | plotting packages are in another interpreter |
-| `PYTHON_BIN` | examples 08--10 and helper scripts | `$HOME/anaconda3/bin/python` if present, otherwise `python3` | another Python environment is needed |
-| `ENABLE_PYTHON_PLOTS` | optional plotting steps | `auto` | use `0` to skip Python figures |
-
-Root-mesh paths are command-line parameters, not machine constants. Keep the
-provided `common/mesh/unit_square/D` basename or pass another EasyMesh basename
-without the `.n`, `.e`, or `.s` suffix.
+environment once in the first-time setup above.

@@ -10,6 +10,13 @@ with the manufactured solution `u = sin(pi*x) sin(2*pi*y)` and Dirichlet data
 on all four sides. It introduces AFEPack template elements, the P1 finite
 element space, matrix assembly, boundary conditions, and the algebraic solver.
 
+## Main output
+
+The computed P1 solution reproduces the positive and negative lobes of the
+manufactured solution on the unit-square mesh.
+
+![P1 finite-element solution of the manufactured Poisson problem.](../assets/results/00_poisson_solution.png)
+
 Run:
 
 ```bash

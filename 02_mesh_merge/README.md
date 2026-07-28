@@ -20,6 +20,13 @@ eta_Yuan(K) = 1  if d(x_K, S_Yuan) = 0, and 0 otherwise.
 Thus the distance is not used as a continuously varying error indicator:
 only triangles whose barycenters lie inside a stroke are refined.
 
+## Main output
+
+The two peer meshes refine Tian and Yuan independently. The common mesh
+contains the union of both refinement histories.
+
+![Tian peer mesh, Yuan peer mesh, and their merged Tianyuan mesh.](../assets/results/02_tianyuan_merge_overview.png)
+
 ## What is merged
 
 Both peer meshes start from one AFEPack `HGeometryTree<2>`.

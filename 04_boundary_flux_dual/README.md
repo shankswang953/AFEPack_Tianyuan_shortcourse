@@ -20,6 +20,16 @@ vertical column above the target patch. The numerical code is still a forward
 solve: it receives `Q` and computes `T_h`; `T_ex` is retained only for checking
 the result.
 
+## Main results
+
+| full primal residual indicator | boundary-flux dual magnitude |
+|---|---|
+| ![Cell and flux-jump residual indicator for the manufactured solution.](figures/manufactured_full_residual_indicator.png) | ![Focused discrete-dual magnitude near the bottom flux target.](figures/boundary_flux_dual_magnitude_focused.png) |
+
+The primal residual follows unresolved equation error throughout the domain,
+while the dual concentrates around the bottom-boundary patch that defines the
+quantity of interest.
+
 The target functional is the outward heat flux through that patch,
 
 ```text

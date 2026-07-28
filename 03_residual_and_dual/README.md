@@ -13,6 +13,15 @@ Boundary mark `1` is the cooled bottom edge. The other boundaries are
 insulated. The source and sensor are deliberately separated so that residual,
 dual, and DWR refinement have visibly different meanings.
 
+## Main results
+
+| physical strong residual | discrete dual magnitude | DWR product indicator |
+|---|---|---|
+| ![Strong residual localized around the heat source.](figures/strong_residual.png) | ![Discrete dual magnitude localized around the sensor.](figures/dual_magnitude.png) | ![Residual-times-dual-correction DWR indicator and marked elements.](figures/dwr_indicator.png) |
+
+The residual identifies the equation defect, the dual identifies sensitivity
+to the measurement, and the DWR product retains elements important to both.
+
 ## Residual refinement
 
 The residual-only sequence marks with

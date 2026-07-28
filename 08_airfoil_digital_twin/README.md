@@ -22,6 +22,13 @@ changes remain visible.
 
 ![High-resolution AFEPack mesh evolution during online digital-twin control.](../assets/animations/digital_twin_mesh_evolution.gif)
 
+## Main output figure
+
+The final static frame is suitable for lecture notes and shows the converged
+NACA0012 boundary together with the real locally refined AFEPack mesh.
+
+![Final Digital Twin airfoil and AFEPack mesh.](../assets/results/08_digital_twin_final_mesh.png)
+
 ## What is measured
 
 The current and target UIUC-style `dat` files use the same fixed x-grid.  The

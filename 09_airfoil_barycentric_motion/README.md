@@ -35,6 +35,16 @@ quality-improving smoothing.
 
 ![High-resolution comparison of boundary motion, geometric targets, and quality-aware smoothing.](../assets/animations/barycentric_smoothing_mechanism.gif)
 
+## Main output figures
+
+The selected mesh panels verify that all stages retain the same node and
+element connectivity. The quality curve records the minimum element quality
+over the complete continuation.
+
+| fixed-topology mesh path | minimum quality along the path |
+|---|---|
+| ![Selected meshes along the circular-profile-to-NACA0012 path.](../assets/results/09_fixed_topology_mesh_path.png) | ![Minimum triangular-element quality versus barycentric coordinate.](../assets/results/09_mesh_quality_along_path.png) |
+
 ## Algorithm
 
 1. Fit the circular data with the extracted Bezier implementation.

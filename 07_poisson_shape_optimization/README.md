@@ -58,6 +58,13 @@ D = a^2/4 - C log(a).
 For `R = 2` and `a = 0.6`, the exact mean temperature is approximately
 `0.167084`.
 
+## Main output
+
+Four coordinate-search sweeps transform the fixed-area irregular hole toward
+the optimal concentric circle while increasing the mean temperature.
+
+![Poisson shape-optimization history from the irregular hole to the circular optimum.](../assets/results/07_shape_history.svg)
+
 ## Run
 
 ```bash

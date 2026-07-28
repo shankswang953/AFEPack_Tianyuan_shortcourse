@@ -5,6 +5,19 @@ refinement through a steady heat-conduction problem.  The construction
 deliberately separates the largest equation defect from the region that
 controls the requested measurement.
 
+## Main results
+
+From left to right, the final meshes come from residual, dual-magnitude, and
+DWR refinement. They place their degrees of freedom in visibly different
+regions.
+
+![Final residual, dual-magnitude, and DWR adaptive meshes.](../assets/results/05_final_meshes_triptych.png)
+
+The target-functional comparison shows why the spatial distinction matters:
+DWR reaches the smallest goal error with fewer degrees of freedom.
+
+![Target-functional error versus degrees of freedom for three adaptive strategies.](../assets/results/05_functional_error_vs_dofs.png)
+
 ## Physical problem
 
 Let `Omega = (0,1)^2`.  The temperature satisfies

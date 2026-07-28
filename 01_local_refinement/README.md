@@ -22,6 +22,19 @@ sigma = 0.10.
 The indicators are deliberately simple: a triangle is important when it is
 close to one selected point.
 
+## Main results
+
+The indicator plot shows the two independent demands, their equal-scale sum,
+and the scale-dominated sum.
+
+![Independent and combined local indicator fields.](../assets/results/01_indicator_scaling.png)
+
+The final meshes expose the consequence: independent refinement preserves
+both requests, whereas the factor-50 combined indicator spends essentially
+all of its shared marking budget near the upper-right target.
+
+![Independent, equally combined, and scale-dominated refinement meshes.](../assets/results/01_refinement_comparison.png)
+
 ## Four refinement experiments
 
 The run generates four meshes from the same root:

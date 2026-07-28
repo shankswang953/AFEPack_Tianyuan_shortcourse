@@ -10,6 +10,14 @@ It demonstrates three separate steps:
 
 No PDE is assembled or solved, and no adaptive refinement is performed.
 
+## Main output
+
+The overview follows one persistent action from the updated airfoil data and
+Bezier refit through boundary motion and interior smoothing. Connectivity is
+unchanged and no element is inverted.
+
+![Airfoil data update, initial mesh, moved boundary, and smoothed mesh.](../assets/results/06_mesh_motion_overview.png)
+
 ## Relation to the Euler example
 
 `airfoil_bezier.hpp` is a standalone extraction of only the airfoil-data and

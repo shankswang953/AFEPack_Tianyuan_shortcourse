@@ -11,6 +11,16 @@ Gaussian action selected at each step.
 
 ![High-resolution Double-DQN airfoil shape-evolution rollout.](../assets/animations/rl_shape_evolution.gif)
 
+## Main output figures
+
+The training curves summarize episode return and terminal data error. The
+evaluation curve shows the saved greedy policy driving the circle-to-target
+data MSE to zero.
+
+| deterministic training history | saved-policy evaluation loss |
+|---|---|
+| ![Double-DQN training diagnostics over 400 episodes.](../assets/results/10_training_history.png) | ![Data MSE along the final greedy rollout.](../assets/results/10_evaluation_loss.png) |
+
 ## RL problem
 
 The state is the difference between the current and target movable ordinates:

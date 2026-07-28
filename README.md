@@ -39,6 +39,36 @@ Every official `run.sh` and the Python mesh entry points automatically read
 | EasyMesh generation | initial triangulation and topology reconstruction after remeshing | `EASYMESH_BIN`, `EASYMESH2MESH_BIN` |
 | Python helper/visualization | figures, animations, and the Python-based examples 08--10 | `PYTHON_BIN`, `PLOT_PYTHON`, `ENABLE_PYTHON_PLOTS` |
 
+### Install the Python packages
+
+Python 3.10 or newer is recommended. After setting `PYTHON_BIN` in
+`course_config.local`, install every package used in the course with:
+
+```bash
+AFEPACK_EXAMPLES_ROOT="$PWD"
+. ./course_config.sh
+"$PYTHON_BIN" -m pip install -r requirements.txt
+```
+
+The packages are grouped by purpose:
+
+| use | required packages |
+|---|---|
+| numerical arrays and indicator plots | `numpy` |
+| PNG figures and GIF animations | `matplotlib`, `pillow` |
+| digital-twin neural networks (`08`) | `torch` |
+| reinforcement learning and its animation (`10`) | `torch`, `imageio` |
+
+For a smaller installation, example `08` and example `10` also provide their
+own requirement files:
+
+```bash
+AFEPACK_EXAMPLES_ROOT="$PWD"
+. ./course_config.sh
+"$PYTHON_BIN" -m pip install -r 08_airfoil_digital_twin/requirements.txt
+"$PYTHON_BIN" -m pip install -r 10_airfoil_rl_dat/requirements.txt
+```
+
 Python plotting is optional for the C++ examples. Set
 `ENABLE_PYTHON_PLOTS=0` to keep numerical and mesh output while skipping
 PNG/GIF generation. Python remains required for the algorithms in examples

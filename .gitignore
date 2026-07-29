@@ -6,6 +6,7 @@
 **/.cache/
 **/output/
 course_config.local
+AFEPack_Short_Course_Slides.pdf
 
 # C/C++ build products
 *.o

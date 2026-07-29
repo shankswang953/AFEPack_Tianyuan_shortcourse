@@ -1,5 +1,10 @@
 # AFEPack course examples
 
+**Course slides:** [AFEPack_Short_Course_Slides.pdf](AFEPack_Short_Course_Slides.pdf)
+
+The slides introduce the concepts behind the examples below and include the
+commands recommended for live classroom demonstrations.
+
 <!-- script-interface -->
 ## First-time setup: configure paths once
 

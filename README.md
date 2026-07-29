@@ -1,9 +1,6 @@
 # AFEPack course examples
 
-**High-resolution course slides:** [View or download from Google Drive](https://drive.google.com/file/d/1hIARgAdCFNDT0fIGOSmqJkdJqEACcKSq/view?usp=sharing)
-
-The slides introduce the concepts behind the examples below and include the
-commands recommended for live classroom demonstrations.
+**Course slides:** [Google Drive link](https://drive.google.com/file/d/1hIARgAdCFNDT0fIGOSmqJkdJqEACcKSq/view?usp=sharing)
 
 <!-- script-interface -->
 ## First-time setup: configure paths once

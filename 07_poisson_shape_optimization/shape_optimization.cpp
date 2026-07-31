@@ -149,6 +149,22 @@ fs::path environment_path(
   return value != nullptr && *value != '\0' ? fs::path(value) : fallback;
 }
 
+bool search_path_contains_file(
+    const std::string& search_path,
+    const fs::path& filename)
+{
+  std::istringstream entries(search_path);
+  std::string directory;
+  while (std::getline(entries, directory, ':')) {
+    const fs::path candidate_directory =
+        directory.empty() ? fs::path(".") : fs::path(directory);
+    if (fs::exists(candidate_directory / filename)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 double exact_concentric_annulus_mean_temperature()
 {
   const double outer_squared = kOuterRadius * kOuterRadius;
@@ -894,20 +910,25 @@ int main(int argc, char** argv)
         environment_path(
             "EASYMESH_BIN",
             home / "bin/easymesh");
-    const fs::path template_directory =
-        environment_path(
-            "AFEPACK_TEMPLATE_PATH",
-            home / "include/AFEPack/template/triangle");
+    const char* configured_template_path =
+        std::getenv("AFEPACK_TEMPLATE_PATH");
+    const std::string template_search_path =
+        configured_template_path != nullptr
+            && *configured_template_path != '\0'
+        ? configured_template_path
+        : (home / "include/AFEPack/template/triangle").string();
 
     if (!fs::exists(easymesh_executable)) {
       throw std::runtime_error(
           "EasyMesh executable not found: "
           + easymesh_executable.string());
     }
-    if (!fs::exists(template_directory / "triangle.tmp_geo")) {
+    if (!search_path_contains_file(
+            template_search_path,
+            "triangle.tmp_geo")) {
       throw std::runtime_error(
-          "AFEPack triangle templates not found: "
-          + template_directory.string());
+          "AFEPack triangle templates not found in search path: "
+          + template_search_path);
     }
     P1Templates templates;
 

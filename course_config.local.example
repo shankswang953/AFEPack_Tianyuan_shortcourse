@@ -8,6 +8,8 @@
 # AFEPACK_PREFIX=/Users/your-name
 # OPENBLAS_PREFIX=/opt/local
 # BOOST_INCLUDE=/opt/local/libexec/boost/1.81/include
+# On macOS this is normally inferred from libAFEPack; override only if needed.
+# COURSE_TARGET_ARCH=x86_64
 # Usually derived from AFEPACK_PREFIX; uncomment only for a split installation.
 # AFEPACK_PATH=/path/to/AFEPack
 # AFEPACK_TEMPLATE_PATH=/path/to/triangle:/path/to/twin_triangle

@@ -1,6 +1,6 @@
-"""Test digital-twin airfoil geometry, actions, safety, and state construction.
+"""Test ML-iteration airfoil geometry, actions, safety, and state construction.
 
-Run from `08_airfoil_digital_twin/` with:
+Run from `08_airfoil_ml_iteration/` with:
     python3 -m unittest tests.test_geometry -v
 
 The tests read checked-in files below `data/`, print results to the terminal,
@@ -12,7 +12,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from dt_airfoil.geometry import (
+from ml_airfoil.geometry import (
     Action,
     action_points_toward_target,
     apply_action,

@@ -1,8 +1,16 @@
-# Airfoil boundary control with an online digital twin
+# Airfoil boundary control through an online ML iteration
 
 This example contains no CFD solver.  It learns how one fixed-width Gaussian
 boundary action changes the distance between the current and target airfoil
 meshes.
+
+This is a surrogate-assisted machine-learning iteration, not a digital twin.
+The neural network predicts the immediate objective improvement
+`(state, action) -> reward`; it does not maintain a synchronized dynamical
+replica of an airfoil or CFD system.  Each iteration ranks candidate actions
+with the learned reward model, verifies one candidate with the real
+AFEPack/EasyMesh mesh-transition pipeline, appends the observed transition,
+and retrains the model.
 
 The initial obstacle is a radius-0.5 circle centered at `(0.5, 0)`.  The outer
 far-field circle has the same center.  The target is NACA0012.  Both shapes use
@@ -11,23 +19,23 @@ the same fixed leading and trailing edges, `(0, 0)` and `(1, 0)`.
 ## Result animations
 
 The marker identifies each accepted real boundary update selected by the
-online digital twin. The dashed curve is the fixed NACA0012 target.
+online reward model. The dashed curve is the fixed NACA0012 target.
 
-![High-resolution online digital-twin airfoil-control rollout.](../assets/animations/digital_twin_shape_evolution.gif)
+![High-resolution online ML-iteration airfoil-control rollout.](../assets/animations/ml_iteration_shape_evolution.gif)
 
 The mesh view reconstructs the real AFEPack triangular mesh after each
 selected accepted update. It includes the frames immediately before and after
 every EasyMesh remeshing event, so both fixed-topology motion and topology
 changes remain visible.
 
-![High-resolution AFEPack mesh evolution during online digital-twin control.](../assets/animations/digital_twin_mesh_evolution.gif)
+![High-resolution AFEPack mesh evolution during online ML-iteration control.](../assets/animations/ml_iteration_mesh_evolution.gif)
 
 ## Main output figure
 
 The final static frame is suitable for lecture notes and shows the converged
 NACA0012 boundary together with the real locally refined AFEPack mesh.
 
-![Final Digital Twin airfoil and AFEPack mesh.](../assets/results/08_digital_twin_final_mesh.png)
+![Final ML Iteration airfoil and AFEPack mesh.](../assets/results/08_ml_iteration_final_mesh.png)
 
 ## What is measured
 
@@ -90,19 +98,19 @@ backend/
   generate_airfoil_geometry.cpp centered initial/target geometry
   move_and_smooth.cpp           fixed-topology AFEPack mesh transition
 
-dt_airfoil/
+ml_airfoil/
   geometry.py                   dat I/O, data MSE, and safe Gaussian action
   pointcloud.py                 mesh-boundary extraction for diagnostics
   environment.py                reset, real step, validation, commit/rollback
   replay.py                     persistent transition and policy datasets
-  models.py                     digital-twin and direct-policy MLPs
+  models.py                     reward-prediction and direct-policy MLPs
   learning.py                   training and inference
 
 prepare_case.py                 build independent initial/target meshes
 collect_random.py               robust random warm-up
-train_twin.py                   fit state/action -> reward
-optimize_with_twin.py           rank actions, verify one, update online
-run_twin_controller.py          robust model-based final controller
+train_reward_model.py          fit state/action -> reward
+optimize_with_reward_model.py  rank actions, verify one, update online
+run_ml_iteration.py            robust model-guided iteration
 run_policy.py                   optional continuous direct-policy comparison
 render_trajectory.py            rebuild the GIF from the recorded CSV
 run_experiment.py               run all five stages in order
@@ -117,13 +125,13 @@ To start a new experiment from a completely clean state:
 python3 run_experiment.py --reset --seed 2026
 ```
 
-The data metric is part of every replay reward and twin target.  After
+The data metric is part of every replay reward and reward-model target.  After
 changing it, always use `--reset`; checkpoints or replay rows produced by an
 earlier metric are not compatible with this loss.
 
 This runs the five stages in order: reference mesh preparation, random
-transition collection, digital-twin training, twin-assisted optimization, and
-the model-based twin rollout.  The last stage records the accepted `dat`
+transition collection, reward-model training, model-guided optimization, and
+the final online ML iteration. The last stage records the accepted `dat`
 history and renders the GIF.
 
 ## Reproducible lecture run
@@ -135,8 +143,8 @@ For the classroom demonstration, use the checked-in fixed recipe:
 ```
 
 It always resets generated state, uses master seed `2026`, and passes derived
-seeds explicitly to random transition collection, initial twin training,
-twin-assisted optimization, and online controller retraining. PyTorch is
+seeds explicitly to random transition collection, initial reward-model training,
+reward-model-guided optimization, and online controller retraining. PyTorch is
 restricted to deterministic CPU algorithms and one thread. Select another
 interpreter with `PYTHON_BIN` in the top-level optional
 `course_config.local`.
@@ -150,11 +158,11 @@ weights intentionally become part of the continued experiment.
 The training sequence is:
 
 1. collect real boundary-motion and smoothing transitions;
-2. fit the digital twin to predict real objective improvement
+2. fit the reward model to predict real objective improvement
    `(state, action) -> reward`;
-3. let the twin rank candidate actions and verify the selected action on the
+3. let the reward model rank candidate actions and verify the selected action on the
    real mesh;
-4. add every accepted or rejected real trial to replay and retrain the twin;
+4. add every accepted or rejected real trial to replay and retrain the reward model;
 5. record the accepted shape history and render the final animation.
 
 The default 20-step final rollout is intentionally short.  A more useful
@@ -164,17 +172,17 @@ long run for the circle-to-airfoil deformation is:
 python3 run_experiment.py --reset \
   --seed 2026 \
   --warmup-episodes 10 --warmup-steps 10 \
-  --twin-epochs 1000 \
+  --model-epochs 1000 \
   --optimization-episodes 8 --optimization-steps 20 \
   --controller-steps 180 --candidates 512 --max-real-trials 12 \
   --min-improvement 1e-8 --minimum-mesh-quality 0.40 \
-  --exploration-bonus 1e-3 --twin-safeguard-ratio 0.25 \
+  --exploration-bonus 1e-3 --model-safeguard-ratio 0.25 \
   --fine-action-threshold 0.01
 ```
 
 `--min-improvement` prevents a nearly zero displacement from consuming
 an accepted step.  Such an action is still evaluated and learned by the
-digital twin, but the geometry is rolled back and the corrected twin searches
+reward model, but the geometry is rolled back and the corrected reward model searches
 for a stronger recovery action.
 
 The default final controller uses a finite, transparent, bidirectional action
@@ -184,7 +192,7 @@ mask keeps only the direction that points toward the target data curve.  The
 network still proposes the surface, center, and magnitude, while the direct
 upper/lower `dat`-sample MSE accepts or rejects the real transition.
 Candidates whose geometric thickness guard produces a zero effective shift are
-removed before any real mesh solve.  For each state, the digital twin predicts
+removed before any real mesh solve.  For each state, the reward model predicts
 the reward of every remaining candidate and the real AFEPack mesh verifies the
 highest-ranked one.  Upper- and lower-surface actions always share the same
 candidate pool.  Because the `dat` objective is cheap in this teaching
@@ -194,7 +202,7 @@ proposal is rejected, the same objective ranks the remaining candidates for
 recovery.  Every action must still pass the real AFEPack mesh-motion and
 quality checks.
 If an action inverts a cell, its shift is halved and retried; the invalid
-result also updates the twin.  This avoids the mode collapse that can occur
+result also updates the reward model.  This avoids the mode collapse that can occur
 when a continuous direct policy is trained from several equally good action
 labels.  `run_policy.py` remains available as an advanced comparison.
 
@@ -228,7 +236,7 @@ corresponding trajectory frame has `EasyMesh remesh` in the `source` column of
 
 Because both the initial circle and NACA0012 target are symmetric, accepted
 upper- and lower-surface action counts are kept within one of each other.  The
-twin still chooses the full-chord center and magnitude on the currently
+reward model still chooses the full-chord center and magnitude on the currently
 allowed surface.  This explicit symmetry prior prevents a small data set from
 spending the entire real-mesh budget on one side of the obstacle.
 
@@ -250,9 +258,9 @@ Use the Python installation that provides NumPy and PyTorch:
 ```bash
 python3 prepare_case.py
 python3 collect_random.py --episodes 6 --steps 5 --fresh
-python3 train_twin.py
-python3 optimize_with_twin.py --episodes 4 --steps 5
-python3 run_twin_controller.py --steps 80 --max-real-trials 10
+python3 train_reward_model.py
+python3 optimize_with_reward_model.py --episodes 4 --steps 5
+python3 run_ml_iteration.py --steps 80 --max-real-trials 10
 ```
 
 ## Reset
@@ -286,13 +294,13 @@ episode does not remesh.
 
 During warm-up, 70% of the random actions use the direction expected to reduce
 the circle thickness and 30% deliberately move the wrong way.  This gives the
-twin both positive and negative examples.  After warm-up, the twin ranks many
+reward model both positive and negative examples.  After warm-up, the reward model ranks many
 candidate actions cheaply, but only one selected action is evaluated on the
-real AFEPack mesh.  Accepted twin actions are used to train the direct policy.
+real AFEPack mesh.  Accepted model-selected actions are used to train the direct policy.
 
 The optional `run_policy.py` comparison is also verified online rather than
 open loop.  It executes each continuous policy action on the real mesh, uses
-the result to update the twin, and asks the corrected twin for recovery after
+the result to update the reward model, and asks the corrected reward model for recovery after
 a rejection.
 
 At the start of either final controller, the initial `dat` state is written to
@@ -319,30 +327,30 @@ the optimizer:
 python3 render_trajectory.py --fps 2 --gif-dpi 200
 ```
 
-To show the real boundary and the online digital-twin update together, run:
+To show the real boundary and the online ML-iteration update together, run:
 
 ```bash
-python3 render_boundary_twin_evolution.py --max-frames 41 --fps 2
+python3 render_ml_iteration_evolution.py --max-frames 41 --fps 2
 ```
 
-This reconstructs deterministic twin snapshots from `replay.jsonl` and
+This reconstructs deterministic reward-model snapshots from `replay.jsonl` and
 replays the accepted fixed-topology mesh motions.  The left panel shows the
 local triangular mesh around the accepted airfoil boundary; exact archived
 EasyMesh checkpoints are inserted at remeshing steps.  The right panel shows
-the twin's relative reward ranking over upper- and lower-surface action
+the reward model's relative reward ranking over upper- and lower-surface action
 centers.  The action actually sent to the next real evaluation is marked on
 the ranking.  Mesh replay is cached; add `--rebuild-mesh-cache` to regenerate
 it from scratch.  The outputs are:
 
 ```text
-output/policy_rollout/boundary_twin_evolution.gif
-output/policy_rollout/boundary_twin_evolution_final.png
+output/policy_rollout/boundary_ml_iteration_evolution.gif
+output/policy_rollout/boundary_ml_iteration_evolution_final.png
 ```
 
 For a larger single-panel view containing only the real local mesh, run:
 
 ```bash
-python3 render_boundary_twin_evolution.py \
+python3 render_ml_iteration_evolution.py \
   --mesh-only --max-frames 41 --fps 2 --gif-dpi 200
 ```
 
@@ -373,11 +381,11 @@ Every Python entry point accepts `--help`. The common workflow is:
 |---|---|---|
 | prepare | `python3 prepare_case.py [--force]` | `output/reference/`, `output/current/` |
 | collect | `python3 collect_random.py [--episodes N] [--steps N] [--seed N] [--fresh]` | `output/replay.jsonl` |
-| train | `python3 train_twin.py [--epochs N] [--seed N]` | `output/models/twin.pt` |
-| optimize | `python3 optimize_with_twin.py [--episodes N] [--steps N] [--candidates N] [--seed N] [--retrain-epochs N]` | replay, policy examples, model checkpoints |
-| control | `python3 run_twin_controller.py [OPTIONS]` | `output/policy_rollout/` |
+| train | `python3 train_reward_model.py [--epochs N] [--seed N]` | `output/models/reward_model.pt` |
+| optimize | `python3 optimize_with_reward_model.py [--episodes N] [--steps N] [--candidates N] [--seed N] [--retrain-epochs N]` | replay, policy examples, model checkpoints |
+| control | `python3 run_ml_iteration.py [OPTIONS]` | `output/policy_rollout/` |
 | complete | `python3 run_experiment.py [--reset] [OPTIONS]` | configuration, replay, models, mesh history, rollout |
-| render | `python3 render_trajectory.py [--fps N]` or `python3 render_boundary_twin_evolution.py [OPTIONS]` | GIF/PNG files in `output/policy_rollout/` |
+| render | `python3 render_trajectory.py [--fps N]` or `python3 render_ml_iteration_evolution.py [OPTIONS]` | GIF/PNG files in `output/policy_rollout/` |
 | reset | `python3 reset_project.py [--clean-build]` | removes generated state described above |
 
 `run_teaching_demo.sh` reads `PYTHON_BIN`, `EASYMESH_BIN`, and

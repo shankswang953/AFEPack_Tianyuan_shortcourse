@@ -16,8 +16,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from dt_airfoil.environment import AirfoilMeshEnvironment
-from dt_airfoil.pointcloud import extract_boundary_curves
+from ml_airfoil.environment import AirfoilMeshEnvironment
+from ml_airfoil.pointcloud import extract_boundary_curves
 
 
 def main() -> None:
@@ -41,7 +41,7 @@ def main() -> None:
         environment.target_reference / "mesh_smoothed_nodes.csv",
         environment.target_reference / "mesh_smoothed_elements.csv",
     )
-    print("AFEPack digital-twin case is ready")
+    print("AFEPack ML-iteration case is ready")
     print(f"  state dimension:       {state.size}")
     print(f"  initial boundary:      {initial.all_points.shape[0]} mesh points")
     print(f"  target boundary:       {target.all_points.shape[0]} mesh points")

@@ -1,4 +1,4 @@
-"""Serialize transition and policy examples used by the digital twin.
+"""Serialize transition and policy examples used by the reward model.
 
 This import-only module reads, appends, or rewrites caller-supplied JSONL
 paths, normally `output/replay.jsonl` and `output/policy_examples.jsonl`.

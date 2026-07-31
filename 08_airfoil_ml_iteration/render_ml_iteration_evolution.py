@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-"""Render synchronized real-boundary and digital-twin evolution.
+"""Render synchronized real-boundary and ML-iteration evolution.
 
 Command-line usage:
-    python3 render_boundary_twin_evolution.py [--max-frames N] [--fps N]
+    python3 render_ml_iteration_evolution.py [--max-frames N] [--fps N]
         [--gif-dpi N] [--episode N] [--output FILE]
         [--rebuild-mesh-cache] [--mesh-only]
 
 Requires `output/policy_rollout/data_history.csv` and `output/replay.jsonl`.
-The default outputs are `output/policy_rollout/boundary_twin_evolution.gif`
+The default outputs are `output/policy_rollout/boundary_ml_iteration_evolution.gif`
 and its final PNG; `--mesh-only` selects the boundary-mesh filenames, and
 `--output` overrides the GIF path.
 """
@@ -25,20 +25,20 @@ from pathlib import Path
 
 import numpy as np
 
-from dt_airfoil.geometry import (
+from ml_airfoil.geometry import (
     Action,
     Airfoil,
     Point,
     read_airfoil,
     write_airfoil,
 )
-from dt_airfoil.learning import TwinPredictor, train_twin
-from dt_airfoil.replay import TransitionRecord, load_replay
-from dt_airfoil.trajectory import TrajectoryFrame, read_trajectory
+from ml_airfoil.learning import RewardPredictor, train_reward_model
+from ml_airfoil.replay import TransitionRecord, load_replay
+from ml_airfoil.trajectory import TrajectoryFrame, read_trajectory
 
 
 @dataclass(frozen=True)
-class TwinSnapshot:
+class RewardModelSnapshot:
     trajectory: TrajectoryFrame
     samples: int
     trial_count: int
@@ -54,7 +54,7 @@ class TwinSnapshot:
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Reconstruct twin checkpoints from replay.jsonl and render a "
+            "Reconstruct reward-model checkpoints from replay.jsonl and render a "
             "synchronized boundary/action-ranking GIF."
         )
     )
@@ -75,7 +75,7 @@ def parse_arguments() -> argparse.Namespace:
         "--episode",
         type=int,
         default=None,
-        help="twin-controller episode; default is the latest one",
+        help="ML-iteration episode; default is the latest one",
     )
     parser.add_argument(
         "--output",
@@ -109,10 +109,10 @@ def latest_controller_episode(
     episodes = [
         record.episode
         for record in records
-        if record.phase == "twin_controller"
+        if record.phase == "ml_iteration"
     ]
     if not episodes:
-        raise ValueError("replay contains no twin-controller episode")
+        raise ValueError("replay contains no ML-iteration episode")
     return max(episodes)
 
 
@@ -387,7 +387,7 @@ def controller_partition(
     indices = [
         index
         for index, record in enumerate(records)
-        if record.phase == "twin_controller"
+        if record.phase == "ml_iteration"
         and record.episode == episode
     ]
     if not indices:
@@ -507,7 +507,7 @@ def reconstruct_snapshots(
     selected_frames: list[int],
     mesh_states: dict[int, tuple[np.ndarray, np.ndarray]],
     configuration: dict,
-) -> tuple[np.ndarray, list[TwinSnapshot]]:
+) -> tuple[np.ndarray, list[RewardModelSnapshot]]:
     prefix, controller = controller_partition(
         records,
         controller_episode,
@@ -526,10 +526,10 @@ def reconstruct_snapshots(
     stage_seeds = configuration.get("stage_seeds", {})
     controller_seed = int(stage_seeds.get("controller", 2026))
     controller_epochs = int(
-        config_arguments.get("controller_twin_epochs", 150)
+        config_arguments.get("controller_model_epochs", 150)
     )
     optimization_seed = int(
-        stage_seeds.get("twin_optimization", 23)
+        stage_seeds.get("model_optimization", 23)
     )
     optimization_episodes = int(
         config_arguments.get("optimization_episodes", 4)
@@ -540,12 +540,12 @@ def reconstruct_snapshots(
         / "output"
         / "policy_rollout"
         / ".plot_cache"
-        / "twin_evolution"
+        / "model_evolution"
     )
     cache.mkdir(parents=True, exist_ok=True)
     checkpoint = cache / "snapshot.pt"
 
-    snapshots: list[TwinSnapshot] = []
+    snapshots: list[RewardModelSnapshot] = []
     for frame_index in selected_frames:
         trial_count = positions[frame_index]
         training_records = prefix + controller[:trial_count]
@@ -555,13 +555,13 @@ def reconstruct_snapshots(
         else:
             epochs = controller_epochs
             seed = controller_seed + trial_count
-        train_twin(
+        train_reward_model(
             training_records,
             checkpoint,
             epochs=epochs,
             seed=seed,
         )
-        predictor = TwinPredictor(checkpoint)
+        predictor = RewardPredictor(checkpoint)
         state = state_at_frame(frame_index, controller)
         upper_prediction = predictor.predict(state, upper_actions).reshape(
             len(centers),
@@ -588,7 +588,7 @@ def reconstruct_snapshots(
             next_prediction,
         )
         snapshots.append(
-            TwinSnapshot(
+            RewardModelSnapshot(
                 trajectory=trajectories[frame_index],
                 samples=len(training_records),
                 trial_count=trial_count,
@@ -708,7 +708,7 @@ def render(
     *,
     root: Path,
     centers: np.ndarray,
-    snapshots: list[TwinSnapshot],
+    snapshots: list[RewardModelSnapshot],
     target_file: Path,
     animation_file: Path,
     final_figure: Path,
@@ -753,7 +753,7 @@ def render(
             "ytick.labelsize": 11,
         }
     )
-    figure, (shape_axis, twin_axis) = plt.subplots(
+    figure, (shape_axis, model_axis) = plt.subplots(
         1,
         2,
         figsize=(12.0, 5.2),
@@ -761,7 +761,7 @@ def render(
         gridspec_kw={"width_ratios": (1.05, 0.95)},
     )
     figure.patch.set_facecolor("white")
-    for axis in (shape_axis, twin_axis):
+    for axis in (shape_axis, model_axis):
         axis.set_facecolor("white")
         axis.grid(True, color=grid, linewidth=0.8)
 
@@ -836,12 +836,12 @@ def render(
         frameon=False,
     )
 
-    twin_axis.set_title("DIGITAL: action ranking after update")
-    twin_axis.set_xlim(-0.02, 1.02)
-    twin_axis.set_ylim(-0.05, 1.05)
-    twin_axis.set_xlabel(r"action center $x/c$")
-    twin_axis.set_ylabel("relative predicted reward")
-    upper_line, = twin_axis.plot(
+    model_axis.set_title("LEARNED MODEL: action ranking after update")
+    model_axis.set_xlim(-0.02, 1.02)
+    model_axis.set_ylim(-0.05, 1.05)
+    model_axis.set_xlabel(r"action center $x/c$")
+    model_axis.set_ylabel("relative predicted reward")
+    upper_line, = model_axis.plot(
         [],
         [],
         color=blue,
@@ -850,7 +850,7 @@ def render(
         markersize=3.5,
         label="upper surface",
     )
-    lower_line, = twin_axis.plot(
+    lower_line, = model_axis.plot(
         [],
         [],
         color=gold,
@@ -859,7 +859,7 @@ def render(
         markersize=3.5,
         label="lower surface",
     )
-    proposal_marker, = twin_axis.plot(
+    proposal_marker, = model_axis.plot(
         [],
         [],
         marker="D",
@@ -868,15 +868,15 @@ def render(
         color=red,
         label="next real action",
     )
-    twin_status = twin_axis.text(
+    model_status = model_axis.text(
         0.02,
         0.03,
         "",
-        transform=twin_axis.transAxes,
+        transform=model_axis.transAxes,
         color=navy,
         va="bottom",
     )
-    twin_axis.legend(loc="upper right", frameon=False)
+    model_axis.legend(loc="upper right", frameon=False)
     main_title = figure.suptitle("", color=navy, fontweight="bold")
 
     def draw(frame_number: int):
@@ -916,13 +916,13 @@ def render(
         lower_line.set_data(centers, snapshot.lower_score)
         if snapshot.next_action is None or snapshot.next_score is None:
             proposal_marker.set_data([], [])
-            twin_status.set_text("controller converged")
+            model_status.set_text("controller converged")
         else:
             proposal_marker.set_data(
                 [snapshot.next_action.center],
                 [snapshot.next_score],
             )
-            twin_status.set_text(
+            model_status.set_text(
                 f"next: {snapshot.next_action.surface}  "
                 f"x={snapshot.next_action.center:.3f}  "
                 f"dy={snapshot.next_action.shift:+.4f}\n"
@@ -933,7 +933,7 @@ def render(
         main_title.set_text(
             f"Accepted step {frame.accepted_step}  |  "
             f"data MSE = {frame.loss:.3e}  |  "
-            f"twin samples = {snapshot.samples}"
+            f"model samples = {snapshot.samples}"
         )
         return (
             mesh_collection,
@@ -944,7 +944,7 @@ def render(
             lower_line,
             proposal_marker,
             shape_status,
-            twin_status,
+            model_status,
             main_title,
         )
 
@@ -982,7 +982,7 @@ def main() -> None:
     target_file = root / "data" / "target_naca0012.dat"
     if not history_file.exists() or not replay_file.exists():
         raise SystemExit(
-            "run run_experiment.py before rendering twin evolution"
+            "run run_experiment.py before rendering ML-iteration evolution"
         )
     configuration = (
         json.loads(configuration_file.read_text())
@@ -1029,7 +1029,7 @@ def main() -> None:
         / (
             "boundary_mesh_evolution.gif"
             if arguments.mesh_only
-            else "boundary_twin_evolution.gif"
+            else "boundary_ml_iteration_evolution.gif"
         )
     )
     final_figure = animation_file.with_name(

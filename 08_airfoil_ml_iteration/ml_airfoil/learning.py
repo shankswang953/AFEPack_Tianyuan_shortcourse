@@ -1,4 +1,4 @@
-"""Provide deterministic training and inference helpers for twin/policy models.
+"""Provide deterministic training and inference helpers for reward-model/policy models.
 
 This import-only library has no command-line interface. Training functions
 write checkpoints to caller-supplied paths (normally `output/models/*.pt`);
@@ -15,7 +15,7 @@ import torch
 from torch import nn
 
 from .geometry import Action, action_vector
-from .models import PolicyNetwork, TwinNetwork
+from .models import PolicyNetwork, RewardNetwork
 from .replay import PolicyExample, TransitionRecord
 
 
@@ -41,7 +41,7 @@ def _state_statistics(states: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return mean.astype(np.float32), standard_deviation.astype(np.float32)
 
 
-def train_twin(
+def train_reward_model(
     records: list[TransitionRecord],
     checkpoint: Path,
     *,
@@ -81,7 +81,7 @@ def train_twin(
     state_tensor = torch.from_numpy(normalized_states)
     action_tensor = torch.from_numpy(actions)
     reward_tensor = torch.from_numpy(normalized_rewards)
-    model = TwinNetwork(states.shape[1])
+    model = RewardNetwork(states.shape[1])
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=2.0e-3,
@@ -149,7 +149,7 @@ def train_twin(
     )
 
 
-class TwinPredictor:
+class RewardPredictor:
     def __init__(self, checkpoint: Path) -> None:
         bundle = torch.load(
             checkpoint,
@@ -166,7 +166,7 @@ class TwinPredictor:
         )
         self.reward_mean = float(bundle["reward_mean"])
         self.reward_std = float(bundle["reward_std"])
-        self.model = TwinNetwork(int(bundle["state_dimension"]))
+        self.model = RewardNetwork(int(bundle["state_dimension"]))
         self.model.load_state_dict(bundle["model"])
         self.model.eval()
 
@@ -197,7 +197,7 @@ def train_policy(
     seed: int = 11,
 ) -> TrainingReport:
     if len(examples) < 4:
-        raise ValueError("at least four accepted twin actions are needed")
+        raise ValueError("at least four accepted model-selected actions are needed")
     configure_reproducible_torch(seed)
     states = np.asarray(
         [example.state for example in examples],

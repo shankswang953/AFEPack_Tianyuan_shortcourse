@@ -1,7 +1,7 @@
-"""Public imports for the AFEPack airfoil digital-twin package.
+"""Public imports for the AFEPack airfoil ML-iteration package.
 
 This is a library module and has no command-line interface or direct outputs.
-Import shared geometry/action types from `dt_airfoil`; run the scripts in the
+Import shared geometry/action types from `ml_airfoil`; run the scripts in the
 parent directory for complete experiments.
 """
 

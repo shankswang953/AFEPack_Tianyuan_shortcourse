@@ -1,4 +1,4 @@
-# `dt_airfoil` Python package
+# `ml_airfoil` Python package
 
 These modules implement geometry/actions, the real mesh environment, replay
 serialization, PyTorch models/training, point-cloud diagnostics, and trajectory

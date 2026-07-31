@@ -404,7 +404,7 @@ def state_vector(airfoil: Airfoil) -> np.ndarray:
 
 
 def action_vector(action: Action, shift_max: float = 0.08) -> np.ndarray:
-    """Continuous encoding used by the digital-twin network."""
+    """Continuous encoding used by the ML-iteration network."""
 
     surface = 1.0 if action.surface == "U" else -1.0
     center = 2.0 * action.center - 1.0

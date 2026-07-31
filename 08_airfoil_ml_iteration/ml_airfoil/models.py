@@ -1,4 +1,4 @@
-"""Define the PyTorch twin and direct-policy neural networks.
+"""Define the PyTorch reward model and direct-policy neural networks.
 
 This import-only module has no command-line interface and performs no file I/O.
 Model training and checkpoint output are handled by `learning.py` and the
@@ -11,7 +11,7 @@ import torch
 from torch import nn
 
 
-class TwinNetwork(nn.Module):
+class RewardNetwork(nn.Module):
     """Predict normalized real-mesh reward from state and action."""
 
     def __init__(self, state_dimension: int) -> None:

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-"""Rank candidate actions with the twin and verify them on the real mesh.
+"""Rank candidate actions with the reward model and verify them on the real mesh.
 
 Command-line usage:
-    python3 optimize_with_twin.py [--episodes N] [--steps N]
+    python3 optimize_with_reward_model.py [--episodes N] [--steps N]
         [--candidates N] [--seed N] [--retrain-epochs N]
 
-Requires `output/models/twin.pt`. It updates `output/replay.jsonl`,
-`output/policy_examples.jsonl`, and the twin/policy checkpoints below
+Requires `output/models/reward_model.pt`. It updates `output/replay.jsonl`,
+`output/policy_examples.jsonl`, and the reward-model/policy checkpoints below
 `output/models/`.
 """
 
@@ -18,15 +18,15 @@ from pathlib import Path
 
 import numpy as np
 
-from dt_airfoil.environment import AirfoilMeshEnvironment
-from dt_airfoil.learning import (
+from ml_airfoil.environment import AirfoilMeshEnvironment
+from ml_airfoil.learning import (
     PolicyPredictor,
-    TwinPredictor,
+    RewardPredictor,
     sample_actions,
     train_policy,
-    train_twin,
+    train_reward_model,
 )
-from dt_airfoil.replay import (
+from ml_airfoil.replay import (
     PolicyExample,
     TransitionRecord,
     append_policy_example,
@@ -49,10 +49,10 @@ def main() -> None:
     output = root / "output"
     replay_file = output / "replay.jsonl"
     policy_data_file = output / "policy_examples.jsonl"
-    twin_checkpoint = output / "models" / "twin.pt"
+    reward_model_checkpoint = output / "models" / "reward_model.pt"
     policy_checkpoint = output / "models" / "policy.pt"
-    if not twin_checkpoint.exists():
-        raise SystemExit("run train_twin.py before twin optimization")
+    if not reward_model_checkpoint.exists():
+        raise SystemExit("run train_reward_model.py before reward-model optimization")
 
     rng = np.random.default_rng(arguments.seed)
     environment = AirfoilMeshEnvironment(root)
@@ -65,14 +65,14 @@ def main() -> None:
     for local_episode in range(arguments.episodes):
         episode = episode_offset + local_episode
         state = environment.reset()
-        twin = TwinPredictor(twin_checkpoint)
+        reward_model = RewardPredictor(reward_model_checkpoint)
         policy = (
             PolicyPredictor(policy_checkpoint)
             if policy_checkpoint.exists()
             else None
         )
         print(
-            f"twin episode {episode}: initial loss = "
+            f"model episode {episode}: initial loss = "
             f"{environment.current_loss:.8e}"
         )
         for step in range(arguments.steps):
@@ -83,7 +83,7 @@ def main() -> None:
             )
             if policy is not None:
                 candidates.append(policy.predict(state))
-            predicted_rewards = twin.predict(state, candidates)
+            predicted_rewards = reward_model.predict(state, candidates)
             selected = candidates[int(np.argmax(predicted_rewards))]
             result = environment.step(
                 selected,
@@ -91,7 +91,7 @@ def main() -> None:
             )
             record = TransitionRecord.from_result(
                 result,
-                phase="twin",
+                phase="model_optimization",
                 episode=episode,
                 step=step,
             )
@@ -107,9 +107,9 @@ def main() -> None:
                 f"{'accepted' if result.accepted else 'rolled back'}"
             )
 
-        train_twin(
+        train_reward_model(
             replay,
-            twin_checkpoint,
+            reward_model_checkpoint,
             epochs=arguments.retrain_epochs,
             seed=arguments.seed + local_episode + 1,
         )
@@ -123,11 +123,10 @@ def main() -> None:
             )
         print(f"  episode final loss = {environment.current_loss:.8e}")
 
-    print(f"updated twin:   {twin_checkpoint}")
+    print(f"updated reward model:   {reward_model_checkpoint}")
     if policy_checkpoint.exists():
         print(f"direct policy:  {policy_checkpoint}")
 
 
 if __name__ == "__main__":
     main()
-

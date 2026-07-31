@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-"""Run the optional continuous policy with online twin correction.
+"""Run the optional continuous policy with online reward-model correction.
 
 Command-line usage:
     python3 run_policy.py [--steps N] [--candidates N] [--max-retries N]
-        [--twin-epochs N] [--policy-epochs N] [--min-improvement FLOAT]
+        [--model-epochs N] [--policy-epochs N] [--min-improvement FLOAT]
         [--seed N] [--animation-fps N] [--no-animation]
 
-Requires `output/models/policy.pt` and `twin.pt`. It updates replay/model
+Requires `output/models/policy.pt` and `reward_model.pt`. It updates replay/model
 data and writes trajectory CSV, GIF, and final PNG files below
 `output/policy_rollout/`.
 """
@@ -19,15 +19,15 @@ from pathlib import Path
 
 import numpy as np
 
-from dt_airfoil.environment import AirfoilMeshEnvironment
-from dt_airfoil.learning import (
+from ml_airfoil.environment import AirfoilMeshEnvironment
+from ml_airfoil.learning import (
     PolicyPredictor,
-    TwinPredictor,
+    RewardPredictor,
     sample_actions,
     train_policy,
-    train_twin,
+    train_reward_model,
 )
-from dt_airfoil.replay import (
+from ml_airfoil.replay import (
     PolicyExample,
     TransitionRecord,
     append_policy_example,
@@ -35,7 +35,7 @@ from dt_airfoil.replay import (
     load_policy_examples,
     load_replay,
 )
-from dt_airfoil.trajectory import TrajectoryRecorder, render_trajectory
+from ml_airfoil.trajectory import TrajectoryRecorder, render_trajectory
 
 
 def main() -> None:
@@ -43,14 +43,14 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=20)
     parser.add_argument("--candidates", type=int, default=256)
     parser.add_argument("--max-retries", type=int, default=3)
-    parser.add_argument("--twin-epochs", type=int, default=150)
+    parser.add_argument("--model-epochs", type=int, default=150)
     parser.add_argument("--policy-epochs", type=int, default=250)
     parser.add_argument(
         "--min-improvement",
         type=float,
         default=1.0e-4,
         help=(
-            "reject smaller loss reductions and ask the corrected twin "
+            "reject smaller loss reductions and ask the corrected reward model "
             "for a stronger recovery action"
         ),
     )
@@ -66,7 +66,7 @@ def main() -> None:
     root = Path(__file__).resolve().parent
     output = root / "output"
     policy_checkpoint = output / "models" / "policy.pt"
-    twin_checkpoint = output / "models" / "twin.pt"
+    reward_model_checkpoint = output / "models" / "reward_model.pt"
     replay_file = output / "replay.jsonl"
     policy_data_file = output / "policy_examples.jsonl"
     rollout_dir = output / "policy_rollout"
@@ -74,9 +74,9 @@ def main() -> None:
     animation_file = rollout_dir / "shape_evolution.gif"
     final_figure = rollout_dir / "shape_final.png"
     if not policy_checkpoint.exists():
-        raise SystemExit("run optimize_with_twin.py before run_policy.py")
-    if not twin_checkpoint.exists():
-        raise SystemExit("run train_twin.py before run_policy.py")
+        raise SystemExit("run optimize_with_reward_model.py before run_policy.py")
+    if not reward_model_checkpoint.exists():
+        raise SystemExit("run train_reward_model.py before run_policy.py")
     if arguments.candidates < 2:
         raise SystemExit("--candidates must be at least 2")
     if arguments.max_retries < 0:
@@ -112,7 +112,7 @@ def main() -> None:
         accepted = False
 
         for attempt in range(arguments.max_retries + 1):
-            source = "policy" if attempt == 0 else "twin recovery"
+            source = "policy" if attempt == 0 else "reward-model recovery"
             result = environment.step(
                 action,
                 accept_only_if_improves=True,
@@ -129,11 +129,11 @@ def main() -> None:
             replay.append(record)
 
             # Every real outcome, including a rejected or invalid action,
-            # immediately corrects the digital twin.
-            report = train_twin(
+            # immediately corrects the reward model.
+            report = train_reward_model(
                 replay,
-                twin_checkpoint,
-                epochs=arguments.twin_epochs,
+                reward_model_checkpoint,
+                epochs=arguments.model_epochs,
                 seed=arguments.seed + transition_index,
             )
             print(
@@ -142,7 +142,7 @@ def main() -> None:
                 f"dy={action.shift:+.4f} "
                 f"reward={result.reward:+.4e} "
                 f"{'accepted' if result.accepted else 'rolled back'} "
-                f"[twin samples={report.samples}]"
+                f"[model samples={report.samples}]"
             )
             if not result.valid_mesh:
                 detail_lines = [
@@ -191,18 +191,18 @@ def main() -> None:
                 break
 
             # The state was rolled back and is therefore unchanged.  Use the
-            # corrected twin to search for a replacement action at that state.
-            twin = TwinPredictor(twin_checkpoint)
+            # corrected reward model to search for a replacement action at that state.
+            reward_model = RewardPredictor(reward_model_checkpoint)
             candidates = sample_actions(
                 rng,
                 arguments.candidates,
                 # For this specific circle-to-NACA problem, recovery stays
                 # inside the known thickness-reducing direction: upper down
-                # and lower up.  The twin still ranks locations/magnitudes,
+                # and lower up.  The reward model still ranks locations/magnitudes,
                 # and the real mesh still accepts or rejects the result.
                 good_direction_probability=1.0,
             )
-            predicted_rewards = twin.predict(state, candidates)
+            predicted_rewards = reward_model.predict(state, candidates)
             action = candidates[int(np.argmax(predicted_rewards))]
 
         if not accepted:
@@ -212,7 +212,7 @@ def main() -> None:
             )
             break
     print(f"final loss = {environment.current_loss:.8e}")
-    print(f"updated twin:  {twin_checkpoint}")
+    print(f"updated reward model:  {reward_model_checkpoint}")
     print(f"updated policy: {policy_checkpoint}")
     print(f"data history:   {trajectory_file}")
     if not arguments.no_animation:

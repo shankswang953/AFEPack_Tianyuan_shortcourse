@@ -1,4 +1,4 @@
-# Numerical arrays used by plotting, the digital twin, and reinforcement learning.
+# Numerical arrays used by plotting, the reward model, and reinforcement learning.
 numpy>=2.0
 
 # Static figures and GIF animation writers.

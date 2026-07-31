@@ -100,7 +100,7 @@ the same connectivity SHA-256 at every stage
 ```
 
 The final minimum triangle quality is approximately `0.462`, so the complete
-path stays above the `q_min >= 0.40` threshold used by the digital-twin
+path stays above the `q_min >= 0.40` threshold used by the ML-iteration
 example. For comparison, 400 unconditional Laplacian sweeps per stage produced
 approximately `q_min = 0.243` at the final airfoil. This distinction is useful
 in class:

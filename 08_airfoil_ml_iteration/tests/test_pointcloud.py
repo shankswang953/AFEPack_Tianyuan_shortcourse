@@ -1,6 +1,6 @@
-"""Test digital-twin boundary-curve point-cloud behavior.
+"""Test ML-iteration boundary-curve point-cloud behavior.
 
-Run from `08_airfoil_digital_twin/` with:
+Run from `08_airfoil_ml_iteration/` with:
     python3 -m unittest tests.test_pointcloud -v
 
 The test uses in-memory NumPy arrays and creates no output files.
@@ -12,7 +12,7 @@ import unittest
 
 import numpy as np
 
-from dt_airfoil.pointcloud import BoundaryCurves
+from ml_airfoil.pointcloud import BoundaryCurves
 
 
 class PointCloudTest(unittest.TestCase):

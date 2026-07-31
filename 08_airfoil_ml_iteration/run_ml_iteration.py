@@ -3,12 +3,12 @@
 """Run the robust model-based controller and verify actions on the real mesh.
 
 Command-line usage:
-    python3 run_twin_controller.py [--steps N] [--center-count N]
-        [--max-real-trials N] [--twin-epochs N] [--seed N] [OTHER OPTIONS]
+    python3 run_ml_iteration.py [--steps N] [--center-count N]
+        [--max-real-trials N] [--model-epochs N] [--seed N] [OTHER OPTIONS]
 
 Run with `--help` for improvement, quality, exploration, safeguard,
 backtracking, remeshing, and animation controls. Requires
-`output/models/twin.pt`; updates replay/model state and writes the accepted
+`output/models/reward_model.pt`; updates replay/model state and writes the accepted
 trajectory and figures below `output/policy_rollout/`.
 """
 
@@ -19,25 +19,25 @@ from pathlib import Path
 
 import numpy as np
 
-from dt_airfoil.environment import AirfoilMeshEnvironment
-from dt_airfoil.geometry import (
+from ml_airfoil.environment import AirfoilMeshEnvironment
+from ml_airfoil.geometry import (
     Action,
     action_points_toward_target,
     apply_action,
     data_shape_mse,
     read_airfoil,
 )
-from dt_airfoil.learning import (
-    TwinPredictor,
+from ml_airfoil.learning import (
+    RewardPredictor,
     discrete_actions,
-    train_twin,
+    train_reward_model,
 )
-from dt_airfoil.replay import (
+from ml_airfoil.replay import (
     TransitionRecord,
     append_replay,
     load_replay,
 )
-from dt_airfoil.trajectory import TrajectoryRecorder, render_trajectory
+from ml_airfoil.trajectory import TrajectoryRecorder, render_trajectory
 
 
 def action_key(action: Action) -> tuple[str, float, float]:
@@ -53,12 +53,12 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=80)
     parser.add_argument("--center-count", type=int, default=21)
     parser.add_argument("--max-real-trials", type=int, default=10)
-    parser.add_argument("--twin-epochs", type=int, default=150)
+    parser.add_argument("--model-epochs", type=int, default=150)
     parser.add_argument("--seed", type=int, default=2026)
     parser.add_argument("--min-improvement", type=float, default=1.0e-8)
     parser.add_argument("--minimum-mesh-quality", type=float, default=0.40)
     parser.add_argument("--exploration-bonus", type=float, default=1.0e-3)
-    parser.add_argument("--twin-safeguard-ratio", type=float, default=0.25)
+    parser.add_argument("--model-safeguard-ratio", type=float, default=0.25)
     parser.add_argument("--fine-action-threshold", type=float, default=0.01)
     parser.add_argument("--min-backtrack-shift", type=float, default=0.003)
     parser.add_argument(
@@ -82,8 +82,8 @@ def main() -> None:
         raise SystemExit("--minimum-mesh-quality must be nonnegative")
     if arguments.exploration_bonus < 0.0:
         raise SystemExit("--exploration-bonus must be nonnegative")
-    if not 0.0 <= arguments.twin_safeguard_ratio <= 1.0:
-        raise SystemExit("--twin-safeguard-ratio must lie in [0, 1]")
+    if not 0.0 <= arguments.model_safeguard_ratio <= 1.0:
+        raise SystemExit("--model-safeguard-ratio must lie in [0, 1]")
     if arguments.fine_action_threshold < 0.0:
         raise SystemExit("--fine-action-threshold must be nonnegative")
     if arguments.min_backtrack_shift <= 0.0:
@@ -92,13 +92,13 @@ def main() -> None:
     root = Path(__file__).resolve().parent
     output = root / "output"
     replay_file = output / "replay.jsonl"
-    twin_checkpoint = output / "models" / "twin.pt"
+    reward_model_checkpoint = output / "models" / "reward_model.pt"
     rollout_dir = output / "policy_rollout"
     history_file = rollout_dir / "data_history.csv"
     animation_file = rollout_dir / "shape_evolution.gif"
     final_figure = rollout_dir / "shape_final.png"
-    if not twin_checkpoint.exists():
-        raise SystemExit("run train_twin.py before the twin controller")
+    if not reward_model_checkpoint.exists():
+        raise SystemExit("run train_reward_model.py before the ML iteration")
 
     environment = AirfoilMeshEnvironment(root)
     environment.prepare()
@@ -142,7 +142,7 @@ def main() -> None:
         accepted = False
         objective_converged = False
         next_action: Action | None = None
-        source = "twin grid"
+        source = "reward-model grid"
 
         for trial in range(arguments.max_real_trials):
             if next_action is None:
@@ -219,11 +219,11 @@ def main() -> None:
                     objective_converged = True
                     break
                 if trial == 0:
-                    # The learned digital twin always makes the first
+                    # The learned reward model always makes the first
                     # proposal.  Coverage discourages repeatedly selecting
                     # the same center while the model is still uncertain.
-                    twin = TwinPredictor(twin_checkpoint)
-                    predicted_rewards = twin.predict(state, candidates)
+                    reward_model = RewardPredictor(reward_model_checkpoint)
+                    predicted_rewards = reward_model.predict(state, candidates)
                     coverage_bonus = np.asarray(
                         [
                             arguments.exploration_bonus
@@ -246,14 +246,14 @@ def main() -> None:
                         ]
                     )
                     acquisition_score = predicted_rewards + coverage_bonus
-                    twin_index = int(np.argmax(acquisition_score))
+                    model_index = int(np.argmax(acquisition_score))
                     if (
-                        exact_rewards[twin_index]
-                        >= arguments.twin_safeguard_ratio
+                        exact_rewards[model_index]
+                        >= arguments.model_safeguard_ratio
                         * best_exact_reward
                     ):
-                        next_action = candidates[twin_index]
-                        source = "twin grid"
+                        next_action = candidates[model_index]
+                        source = "reward-model grid"
                     else:
                         next_action = candidates[best_index]
                         source = "data-MSE safeguard"
@@ -278,17 +278,17 @@ def main() -> None:
             tried.add(action_key(result.effective_action))
             record = TransitionRecord.from_result(
                 result,
-                phase="twin_controller",
+                phase="ml_iteration",
                 episode=episode,
                 step=transition_index,
             )
             transition_index += 1
             append_replay(replay_file, record)
             replay.append(record)
-            report = train_twin(
+            report = train_reward_model(
                 replay,
-                twin_checkpoint,
-                epochs=arguments.twin_epochs,
+                reward_model_checkpoint,
+                epochs=arguments.model_epochs,
                 seed=arguments.seed + transition_index,
             )
 
@@ -299,7 +299,7 @@ def main() -> None:
                 f"reward={result.reward:+.4e} "
                 f"{'accepted' if result.accepted else 'rolled back'} "
                 f"{'[remeshed] ' if result.remeshed else ''}"
-                f"[twin samples={report.samples}]"
+                f"[model samples={report.samples}]"
             )
 
             if result.accepted:
@@ -383,7 +383,7 @@ def main() -> None:
 
     assert environment.current_loss is not None
     print(f"final loss = {environment.current_loss:.8e}")
-    print(f"updated twin: {twin_checkpoint}")
+    print(f"updated reward model: {reward_model_checkpoint}")
     print(f"data history: {history_file}")
     if not arguments.no_animation:
         render_trajectory(

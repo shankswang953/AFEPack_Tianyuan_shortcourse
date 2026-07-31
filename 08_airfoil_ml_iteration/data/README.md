@@ -1,4 +1,4 @@
-# Digital-twin airfoil data
+# ML-iteration airfoil data
 
 - `initial_circle.dat`: checked-in initial geometry;
 - `target_naca0012.dat`: checked-in target geometry;

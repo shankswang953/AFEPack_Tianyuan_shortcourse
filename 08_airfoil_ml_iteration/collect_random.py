@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Collect real-mesh transitions for initial digital-twin training.
+"""Collect real-mesh transitions for initial reward-model training.
 
 Command-line usage:
     python3 collect_random.py [--episodes N] [--steps N] [--seed N] [--fresh]
@@ -18,9 +18,9 @@ from pathlib import Path
 
 import numpy as np
 
-from dt_airfoil.environment import AirfoilMeshEnvironment
-from dt_airfoil.learning import sample_actions
-from dt_airfoil.replay import (
+from ml_airfoil.environment import AirfoilMeshEnvironment
+from ml_airfoil.learning import sample_actions
+from ml_airfoil.replay import (
     TransitionRecord,
     append_replay,
     load_replay,
@@ -83,4 +83,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -15,7 +15,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from dt_airfoil.trajectory import render_trajectory
+from ml_airfoil.trajectory import render_trajectory
 
 
 def main() -> None:

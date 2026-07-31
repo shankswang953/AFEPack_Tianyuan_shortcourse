@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Purpose: launch the deterministic, clean, full digital-twin teaching run.
+# Purpose: launch the deterministic, clean, full ML-iteration teaching run.
 # Usage: ./run_teaching_demo.sh
 # The fixed recipe resets state and passes seed/training/controller parameters
 # to run_experiment.py; use that Python entry point to change the parameters.
@@ -23,8 +23,8 @@ exec "$PYTHON_BIN" run_experiment.py \
   --seed 2026 \
   --warmup-episodes 10 \
   --warmup-steps 10 \
-  --twin-epochs 1000 \
-  --controller-twin-epochs 30 \
+  --model-epochs 1000 \
+  --controller-model-epochs 30 \
   --optimization-episodes 6 \
   --optimization-steps 12 \
   --controller-steps 180 \
@@ -33,5 +33,5 @@ exec "$PYTHON_BIN" run_experiment.py \
   --min-improvement 1e-8 \
   --minimum-mesh-quality 0.40 \
   --exploration-bonus 1e-3 \
-  --twin-safeguard-ratio 0.25 \
+  --model-safeguard-ratio 0.25 \
   --fine-action-threshold 0.01

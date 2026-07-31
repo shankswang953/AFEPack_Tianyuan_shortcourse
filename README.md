@@ -58,7 +58,7 @@ The packages are grouped by purpose:
 |---|---|
 | numerical arrays and indicator plots | `numpy` |
 | PNG figures and GIF animations | `matplotlib`, `pillow` |
-| digital-twin neural networks (`08`) | `torch` |
+| ML-iteration neural networks (`08`) | `torch` |
 | reinforcement learning and its animation (`10`) | `torch`, `imageio` |
 
 For a smaller installation, example `08` and example `10` also provide their
@@ -67,7 +67,7 @@ own requirement files:
 ```bash
 AFEPACK_EXAMPLES_ROOT="$PWD"
 . ./course_config.sh
-"$PYTHON_BIN" -m pip install -r 08_airfoil_digital_twin/requirements.txt
+"$PYTHON_BIN" -m pip install -r 08_airfoil_ml_iteration/requirements.txt
 "$PYTHON_BIN" -m pip install -r 10_airfoil_rl_dat/requirements.txt
 ```
 
@@ -116,7 +116,7 @@ The examples are ordered by the concepts introduced in the short course:
 8. `07_poisson_shape_optimization`: optimize a fixed-area Fourier boundary for
    a steady Poisson heat problem; a C++ coordinate search transforms an
    irregular multi-lobed shape into the optimal circle.
-9. `08_airfoil_digital_twin`: learn and validate local upper/lower airfoil
+9. `08_airfoil_ml_iteration`: learn and validate local upper/lower airfoil
    updates, move a persistent mesh, and remesh only when its quality becomes
    unacceptable.
 10. `09_airfoil_barycentric_motion`: construct a constant-speed pointwise
@@ -136,9 +136,9 @@ geometry and mesh files. Generated outputs stay inside each example's own
 The animations below are high-resolution presentation copies. Click an
 animation to open the corresponding example and its reproducible workflow.
 
-| digital-twin boundary control (`08`) | digital-twin mesh evolution (`08`) |
+| ML-iteration boundary control (`08`) | ML-iteration mesh evolution (`08`) |
 |---|---|
-| [![A circular obstacle is progressively controlled toward a NACA0012 target by the online digital twin.](assets/animations/digital_twin_shape_evolution.gif)](08_airfoil_digital_twin/README.md) | [![The real AFEPack triangular mesh follows accepted digital-twin boundary updates and remeshing events.](assets/animations/digital_twin_mesh_evolution.gif)](08_airfoil_digital_twin/README.md) |
+| [![A circular obstacle is progressively controlled toward a NACA0012 target by the online reward model.](assets/animations/ml_iteration_shape_evolution.gif)](08_airfoil_ml_iteration/README.md) | [![The real AFEPack triangular mesh follows accepted ML-iteration boundary updates and remeshing events.](assets/animations/ml_iteration_mesh_evolution.gif)](08_airfoil_ml_iteration/README.md) |
 
 | fixed-topology barycentric motion (`09`) | quality-aware boundary smoothing (`09`) |
 |---|---|
@@ -163,7 +163,7 @@ retested on 2026-07-27.
 | `05_two_heater_goal_adaptivity` | `./run.sh ../common/mesh/unit_square/D --comparison-rounds 1 1 1` | fast three-strategy classroom comparison |
 | `06_airfoil_mesh_motion` | `python3 airfoil_step.py --reset`, then `python3 airfoil_step.py 0.50 U -0.02 --width 0.12 --smooth-iterations 200` | one safe fixed-topology boundary action |
 | `07_poisson_shape_optimization` | `./run.sh output 4` | four coordinate-search sweeps with remeshing |
-| `08_airfoil_digital_twin` | `./run_teaching_demo.sh` | reset and run the complete seed-2026 digital-twin experiment |
+| `08_airfoil_ml_iteration` | `./run_teaching_demo.sh` | reset and run the complete seed-2026 ML-iteration experiment |
 | `09_airfoil_barycentric_motion` | `./run.sh --steps 48 --smooth-iterations 0 --boundary-quality-iterations 20 --quality-floor 0.40` | fixed-topology disk-to-NACA0012 path |
 | `10_airfoil_rl_dat` | `./run.sh --evaluate-only --max-steps 140 --seed 2026` | reload and evaluate the saved RL checkpoint |
 

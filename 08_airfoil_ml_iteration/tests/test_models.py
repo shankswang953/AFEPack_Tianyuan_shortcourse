@@ -1,6 +1,6 @@
-"""Test digital-twin action banks and policy checkpoint round trips.
+"""Test ML-iteration action banks and policy checkpoint round trips.
 
-Run from `08_airfoil_digital_twin/` with:
+Run from `08_airfoil_ml_iteration/` with:
     python3 -m unittest tests.test_models -v
 
 Temporary checkpoints are created in an automatically removed temporary
@@ -15,14 +15,14 @@ from pathlib import Path
 
 import numpy as np
 
-from dt_airfoil.geometry import Action
-from dt_airfoil.learning import (
+from ml_airfoil.geometry import Action
+from ml_airfoil.learning import (
     PolicyPredictor,
     discrete_actions,
     discrete_thickness_reducing_actions,
     train_policy,
 )
-from dt_airfoil.replay import PolicyExample
+from ml_airfoil.replay import PolicyExample
 
 
 class ModelTest(unittest.TestCase):

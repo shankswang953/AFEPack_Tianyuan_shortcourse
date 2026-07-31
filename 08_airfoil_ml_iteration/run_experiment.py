@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Run the complete five-stage airfoil digital-twin experiment.
+"""Run the complete five-stage airfoil ML-iteration experiment.
 
 Command-line usage:
     python3 run_experiment.py [--reset] [--seed N] [STAGE OPTIONS]
@@ -62,12 +62,12 @@ def main() -> None:
     )
     parser.add_argument("--warmup-episodes", type=int, default=6)
     parser.add_argument("--warmup-steps", type=int, default=5)
-    parser.add_argument("--twin-epochs", type=int, default=600)
+    parser.add_argument("--model-epochs", type=int, default=600)
     parser.add_argument(
-        "--controller-twin-epochs",
+        "--controller-model-epochs",
         type=int,
         default=30,
-        help="online twin-training epochs after each real controller trial",
+        help="online reward-model training epochs after each real controller trial",
     )
     parser.add_argument("--optimization-episodes", type=int, default=4)
     parser.add_argument("--optimization-steps", type=int, default=5)
@@ -97,7 +97,7 @@ def main() -> None:
         default=0.40,
     )
     parser.add_argument(
-        "--twin-safeguard-ratio",
+        "--model-safeguard-ratio",
         type=float,
         default=0.25,
     )
@@ -126,8 +126,8 @@ def main() -> None:
     total_start = time.monotonic()
     stage_seeds = {
         "warmup": arguments.seed + 101,
-        "initial_twin": arguments.seed + 201,
-        "twin_optimization": arguments.seed + 301,
+        "initial_model": arguments.seed + 201,
+        "model_optimization": arguments.seed + 301,
         "controller": arguments.seed + 401,
     }
 
@@ -188,20 +188,20 @@ def main() -> None:
     )
     run_stage(
         root,
-        "3/5 Train the reward-predicting digital twin",
+        "3/5 Train the one-step reward model",
         [
-            "train_twin.py",
+            "train_reward_model.py",
             "--epochs",
-            str(arguments.twin_epochs),
+            str(arguments.model_epochs),
             "--seed",
-            str(stage_seeds["initial_twin"]),
+            str(stage_seeds["initial_model"]),
         ],
     )
     run_stage(
         root,
-        "4/5 Optimize with twin-ranked, real-verified actions",
+        "4/5 Optimize with reward-model-ranked, real-verified actions",
         [
-            "optimize_with_twin.py",
+            "optimize_with_reward_model.py",
             "--episodes",
             str(arguments.optimization_episodes),
             "--steps",
@@ -209,19 +209,19 @@ def main() -> None:
             "--candidates",
             str(arguments.candidates),
             "--seed",
-            str(stage_seeds["twin_optimization"]),
+            str(stage_seeds["model_optimization"]),
         ],
     )
     policy_arguments = [
-        "run_twin_controller.py",
+        "run_ml_iteration.py",
         "--steps",
         str(arguments.controller_steps),
         "--center-count",
         "21",
         "--max-real-trials",
         str(arguments.max_real_trials),
-        "--twin-epochs",
-        str(arguments.controller_twin_epochs),
+        "--model-epochs",
+        str(arguments.controller_model_epochs),
         "--seed",
         str(stage_seeds["controller"]),
         "--min-improvement",
@@ -230,8 +230,8 @@ def main() -> None:
         str(arguments.minimum_mesh_quality),
         "--exploration-bonus",
         str(arguments.exploration_bonus),
-        "--twin-safeguard-ratio",
-        str(arguments.twin_safeguard_ratio),
+        "--model-safeguard-ratio",
+        str(arguments.model_safeguard_ratio),
         "--fine-action-threshold",
         str(arguments.fine_action_threshold),
         "--animation-fps",
@@ -241,7 +241,7 @@ def main() -> None:
         policy_arguments.append("--no-animation")
     run_stage(
         root,
-        "5/5 Run the model-based twin controller and record shape history",
+        "5/5 Run the model-based ML iteration and record shape history",
         policy_arguments,
     )
 

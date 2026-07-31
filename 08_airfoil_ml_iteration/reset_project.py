@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Remove generated digital-twin experiment state while preserving source data.
+"""Remove generated ML-iteration experiment state while preserving source data.
 
 Command-line usage:
     python3 reset_project.py [--clean-build]

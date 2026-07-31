@@ -14,7 +14,7 @@ reproducible files below the examples' ignored `output/` directories.
 | `05` | `05_functional_error_vs_dofs.png` | the 10/10/7 comparison's `functional_error_vs_dofs.png` |
 | `06` | `06_mesh_motion_overview.png` | `06_airfoil_mesh_motion/output/figures/mesh_motion_overview.png` |
 | `07` | `07_shape_history.svg` | `07_poisson_shape_optimization/output/shape_history.svg` |
-| `08` | `08_digital_twin_final_mesh.png` | `08_airfoil_digital_twin/output/policy_rollout/boundary_mesh_evolution_final.png` |
+| `08` | `08_ml_iteration_final_mesh.png` | `08_airfoil_ml_iteration/output/policy_rollout/boundary_mesh_evolution_final.png` |
 | `09` | `09_fixed_topology_mesh_path.png` | `09_airfoil_barycentric_motion/output/figures/02_fixed_topology_mesh_path.png` |
 | `09` | `09_mesh_quality_along_path.png` | `09_airfoil_barycentric_motion/output/figures/03_mesh_quality_along_path.png` |
 | `10` | `10_training_history.png` | `10_airfoil_rl_dat/output/training_history.png` |

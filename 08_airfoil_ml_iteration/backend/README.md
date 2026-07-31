@@ -1,4 +1,4 @@
-# Digital-twin C++ backend
+# ML-iteration C++ backend
 
 This directory builds two internal executables:
 

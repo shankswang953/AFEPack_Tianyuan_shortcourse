@@ -16,6 +16,22 @@ output_dir=${1:-"$script_dir/output"}
 sweeps=${2:-4}
 
 course_require_executable EasyMesh "$EASYMESH_BIN" EASYMESH_BIN
+course_require_executable ImageMagick "$IMAGE_CONVERT_BIN" IMAGE_CONVERT_BIN
 make -C "$script_dir"
 
 "$script_dir/shape_optimization" "$output_dir" "$sweeps"
+
+find "$output_dir" -type f -name '*.svg' -print |
+while IFS= read -r svg_file; do
+  png_file=${svg_file%.svg}.png
+  "$IMAGE_CONVERT_BIN" \
+    -density 144 \
+    "$svg_file" \
+    -background white \
+    -alpha remove \
+    -alpha off \
+    "$png_file"
+  rm -f "$svg_file"
+done
+
+echo "PNG figures: $output_dir"

@@ -69,6 +69,13 @@ case "$ENABLE_PYTHON_PLOTS" in
 esac
 : "${PYTHON:=$PYTHON_BIN}"
 
+# ImageMagick: rasterize the C++-generated teaching figures when an example
+# publishes PNG output without requiring Python.
+if [ -z "${IMAGE_CONVERT_BIN:-}" ]; then
+  IMAGE_CONVERT_BIN=$(course_find_executable \
+    "/opt/local/bin/convert" convert || true)
+fi
+
 course_require_executable()
 {
   tool_name=$1
@@ -93,3 +100,4 @@ export AFEPACK_PREFIX OPENBLAS_PREFIX BOOST_INCLUDE
 export AFEPACK_PATH AFEPACK_TEMPLATE_PATH
 export EASYMESH_BIN EASYMESH2MESH_BIN
 export PYTHON_BIN PLOT_PYTHON PYTHON ENABLE_PYTHON_PLOTS
+export IMAGE_CONVERT_BIN

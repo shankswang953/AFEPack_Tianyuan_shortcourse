@@ -63,7 +63,7 @@ For `R = 2` and `a = 0.6`, the exact mean temperature is approximately
 Four coordinate-search sweeps transform the fixed-area irregular hole toward
 the optimal concentric circle while increasing the mean temperature.
 
-![Poisson shape-optimization history from the irregular hole to the circular optimum.](../assets/results/07_shape_history.svg)
+![Poisson shape-optimization history from the irregular hole to the circular optimum.](../assets/results/07_shape_history.png)
 
 ## Run
 
@@ -71,10 +71,11 @@ the optimal concentric circle while increasing the mean temperature.
 ./run.sh
 ```
 
-The executable is entirely C++. For every candidate it writes a two-boundary
+The optimizer is entirely C++. For every candidate it writes a two-boundary
 EasyMesh description, remeshes the region between the fixed outer circle and
 the variable hole, solves the P1 Poisson problem with AFEPack, integrates the
-objective, and performs coordinate search. Python is not required.
+objective, and performs coordinate search. The launcher uses ImageMagick to
+rasterize the final figures as PNG files; Python is not required.
 
 The default run performs four coordinate-search sweeps:
 
@@ -87,9 +88,9 @@ The default run performs four coordinate-search sweeps:
 ```text
 output/history.csv
 output/summary.txt
-output/shape_comparison.svg
-output/shape_history.svg
-output/mesh_history.svg
+output/shape_comparison.png
+output/shape_history.png
+output/mesh_history.png
 
 output/iterations/iter_000/
 output/iterations/iter_001/
@@ -105,16 +106,16 @@ outer_boundary.csv
 shape.csv
 shape.d
 shape.n / shape.e / shape.s
-mesh.svg
+mesh.png
 temperature.dx
-temperature.svg
+temperature.png
 parameters.txt
 ```
 
 `shape.csv` contains the variable hole boundary. `outer_boundary.csv` is fixed.
-`mesh.svg` shows the EasyMesh triangulation of `D minus S(p)`.
-`temperature.svg` overlays the computed temperature and mesh.
-`shape_history.svg` and `mesh_history.svg` show every accepted configuration at
+`mesh.png` shows the EasyMesh triangulation of `D minus S(p)`.
+`temperature.png` overlays the computed temperature and mesh.
+`shape_history.png` and `mesh_history.png` show every accepted configuration at
 the same physical scale.
 
 <!-- script-interface -->

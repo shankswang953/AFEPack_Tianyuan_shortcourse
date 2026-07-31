@@ -24,3 +24,6 @@
 # PYTHON_BIN=/path/to/python
 # PLOT_PYTHON=/path/to/python
 # ENABLE_PYTHON_PLOTS=0
+
+# 4. Raster conversion for C++-generated figures in example 07.
+# IMAGE_CONVERT_BIN=/path/to/convert

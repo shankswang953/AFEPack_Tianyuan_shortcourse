@@ -3,7 +3,7 @@
 # Purpose: compare residual, dual-magnitude, and DWR adaptive refinements.
 # Usage: ./run.sh [ROOT_MESH] [--rounds N | --comparison-rounds R [U] D]
 # ROOT_MESH defaults to ../common/mesh/unit_square/D.
-# Output: output/ by default; round/comparison modes use named subdirectories.
+# Output: output/runs/<configuration> with summary, fields, meshes, and figures.
 # Configuration: edit ../course_config.local once for non-default paths.
 
 set -eu
@@ -22,19 +22,41 @@ case "$root_mesh" in
 esac
 
 make -C "$script_dir"
-output_dir="$script_dir/output"
-if [ "$#" -eq 2 ] && [ "$1" = "--rounds" ] && [ "$2" != "6" ]; then
-  output_dir="$script_dir/output/rounds_$2"
+
+run_name=default
+if [ "$#" -eq 2 ] && [ "$1" = "--rounds" ]; then
+  run_name="rounds_$2"
 fi
 if [ "$#" -eq 3 ] && [ "$1" = "--comparison-rounds" ]; then
-  output_dir="$script_dir/output/comparison_residual_$2_dwr_$3"
+  run_name="comparison_residual_$2_dual_$3_dwr_$3"
 fi
 if [ "$#" -eq 4 ] && [ "$1" = "--comparison-rounds" ]; then
-  output_dir="$script_dir/output/comparison_residual_$2_dual_$3_dwr_$4"
+  run_name="comparison_residual_$2_dual_$3_dwr_$4"
 fi
+if [ "$#" -eq 2 ] && [ "$1" = "--uniform-reference" ]; then
+  run_name="uniform_reference_level_$2"
+fi
+
+output_dir="$script_dir/output/runs/$run_name"
 mkdir -p "$output_dir"
 cd "$output_dir"
 
 "$script_dir/main" "$root_mesh" "$@"
 
-echo "Outputs are in $output_dir"
+if [ -f "$output_dir/summary/functional_comparison.dat" ] &&
+   course_python_can_plot; then
+  plot_cache=${MPLCONFIGDIR:-"${TMPDIR:-/tmp}/afepack-matplotlib"}
+  mkdir -p "$plot_cache"
+  if ! MPLCONFIGDIR="$plot_cache" \
+       "$PLOT_PYTHON" "$script_dir/plot_summary.py" "$output_dir"; then
+    echo "Warning: numerical outputs succeeded, but PNG plotting failed." >&2
+  fi
+fi
+
+echo "Output directory: $output_dir"
+echo "  summary/  convergence histories and reference values"
+echo "  fields/   solution, residual, dual, and DWR data"
+echo "  meshes/   OpenDX meshes for each strategy"
+if [ -d "$output_dir/figures" ]; then
+  echo "  figures/  optional PNG summaries"
+fi

@@ -38,9 +38,22 @@ constexpr double kSensorCenterY = 0.18;
 constexpr double kSensorSigma = 0.120;
 constexpr int kDefaultAdaptationRounds = 6;
 constexpr double kRefineFraction = 0.05;
-constexpr double kDualColorGamma = 4.0;
 constexpr int kReferenceModes = 160;
 constexpr int kReferenceIntervals = 4096;
+
+void prepare_output_directories() {
+  for (const char* directory : {
+           "summary",
+           "fields/problem",
+           "fields/residual",
+           "fields/dual",
+           "fields/dwr",
+           "meshes/residual",
+           "meshes/dual",
+           "meshes/dwr"}) {
+    std::filesystem::create_directories(directory);
+  }
+}
 
 double heat_source(const double* point) {
   const double distractor_dx = point[0] - kDistractorCenterX;
@@ -513,24 +526,6 @@ void adapt_with_afepack_quantile(
   adaptor.adapt();
 }
 
-struct Bounds {
-  double xmin;
-  double xmax;
-  double ymin;
-  double ymax;
-};
-
-Bounds mesh_bounds(const RegularMesh<kDimension>& mesh) {
-  Bounds bounds{mesh.point(0)[0], mesh.point(0)[0],
-                mesh.point(0)[1], mesh.point(0)[1]};
-  for (unsigned int i = 1; i < mesh.n_point(); ++i) {
-    bounds.xmin = std::min(bounds.xmin, mesh.point(i)[0]);
-    bounds.xmax = std::max(bounds.xmax, mesh.point(i)[0]);
-    bounds.ymin = std::min(bounds.ymin, mesh.point(i)[1]);
-    bounds.ymax = std::max(bounds.ymax, mesh.point(i)[1]);
-  }
-  return bounds;
-}
 
 std::vector<double> sample_at_element_centroids(
     const RegularMesh<kDimension>& mesh,
@@ -553,197 +548,35 @@ std::vector<double> sample_at_element_centroids(
   return values;
 }
 
-double svg_x(double x, const Bounds& bounds) {
-  return 55.0 + 690.0 * (x - bounds.xmin) /
-                    (bounds.xmax - bounds.xmin);
-}
-
-double svg_y(double y, const Bounds& bounds) {
-  return 745.0 - 690.0 * (y - bounds.ymin) /
-                     (bounds.ymax - bounds.ymin);
-}
-
-void write_mesh_edges_svg(const RegularMesh<kDimension>& mesh,
-                          const std::string& filename,
-                          const std::string& caption) {
+void write_cell_field_data(const RegularMesh<kDimension>& mesh,
+                           const std::vector<double>& values,
+                           const std::string& filename) {
   std::ofstream output(filename.c_str());
   if (!output) {
     throw std::runtime_error("Cannot open " + filename);
   }
-  const Bounds bounds = mesh_bounds(mesh);
-  output << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-         << "viewBox=\"0 0 800 800\">\n"
-         << "<rect width=\"800\" height=\"800\" fill=\"white\"/>\n"
-         << "<text x=\"400\" y=\"30\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"20\">"
-         << caption << "</text>\n";
-  output << std::setprecision(10);
-  for (unsigned int edge_index = 0;
-       edge_index < mesh.n_geometry(kDimension - 1); ++edge_index) {
-    const GeometryBM& edge =
-        mesh.geometry(kDimension - 1, edge_index);
-    const Point<kDimension>& first = mesh.point(edge.vertex(0));
-    const Point<kDimension>& second = mesh.point(edge.vertex(1));
-    output << "<line x1=\"" << svg_x(first[0], bounds)
-           << "\" y1=\"" << svg_y(first[1], bounds)
-           << "\" x2=\"" << svg_x(second[0], bounds)
-           << "\" y2=\"" << svg_y(second[1], bounds)
-           << "\" stroke=\"#40566b\" stroke-width=\"0.75\"/>\n";
-  }
-  output << "</svg>\n";
-}
-
-void write_clean_mesh_svg(const RegularMesh<kDimension>& mesh,
-                          const std::string& filename) {
-  std::ofstream output(filename.c_str());
-  if (!output) {
-    throw std::runtime_error("Cannot open " + filename);
-  }
-  const Bounds bounds = mesh_bounds(mesh);
-  output << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-         << "viewBox=\"0 0 800 800\">\n"
-         << "<rect width=\"800\" height=\"800\" fill=\"white\"/>\n";
-  output << std::setprecision(10);
-  for (unsigned int edge_index = 0;
-       edge_index < mesh.n_geometry(kDimension - 1); ++edge_index) {
-    const GeometryBM& edge = mesh.geometry(kDimension - 1, edge_index);
-    const Point<kDimension>& first = mesh.point(edge.vertex(0));
-    const Point<kDimension>& second = mesh.point(edge.vertex(1));
-    output << "<line x1=\"" << svg_x(first[0], bounds)
-           << "\" y1=\"" << svg_y(first[1], bounds)
-           << "\" x2=\"" << svg_x(second[0], bounds)
-           << "\" y2=\"" << svg_y(second[1], bounds)
-           << "\" stroke=\"#52677a\" stroke-width=\"0.58\"/>\n";
-  }
-  output << "</svg>\n";
-}
-
-void write_indicator_svg(const RegularMesh<kDimension>& mesh,
-                         const std::vector<double>& eta_squared,
-                         const std::vector<bool>& marked,
-                         const std::string& filename,
-                         const std::string& caption,
-                         bool show_marked = true) {
-  std::ofstream output(filename.c_str());
-  if (!output) {
-    throw std::runtime_error("Cannot open " + filename);
-  }
-  const Bounds bounds = mesh_bounds(mesh);
-  const double maximum =
-      *std::max_element(eta_squared.begin(), eta_squared.end());
-
-  output << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-         << "viewBox=\"0 0 800 800\">\n"
-         << "<rect width=\"800\" height=\"800\" fill=\"white\"/>\n"
-         << "<text x=\"400\" y=\"30\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"20\">"
-         << caption << "</text>\n";
-  output << std::setprecision(10);
-
+  output << "# element centroid_x centroid_y value\n"
+         << std::scientific << std::setprecision(12);
   for (unsigned int element_index = 0;
        element_index < mesh.n_geometry(kDimension); ++element_index) {
     const GeometryBM& element = mesh.geometry(kDimension, element_index);
-    const double ratio = maximum > 0.0
-                             ? std::sqrt(eta_squared[element_index] / maximum)
-                             : 0.0;
-    const int red = 245;
-    const int green = static_cast<int>(242.0 - 150.0 * ratio);
-    const int blue = static_cast<int>(224.0 - 185.0 * ratio);
-    output << "<polygon points=\"";
+    double x = 0.0;
+    double y = 0.0;
     for (int vertex = 0; vertex < element.n_vertex(); ++vertex) {
       const Point<kDimension>& point = mesh.point(element.vertex(vertex));
-      output << svg_x(point[0], bounds) << ',' << svg_y(point[1], bounds)
-             << ' ';
+      x += point[0];
+      y += point[1];
     }
-    const bool is_marked = show_marked && marked[element_index];
-    output << "\" fill=\"rgb(" << red << ',' << green << ',' << blue
-           << ")\" stroke=\""
-           << (is_marked ? "#9d1825" : "#738496")
-           << "\" stroke-width=\""
-           << (is_marked ? "1.8" : "0.55") << "\"/>\n";
+    output << element_index << ' '
+           << x / element.n_vertex() << ' '
+           << y / element.n_vertex() << ' '
+           << values[element_index] << '\n';
   }
-  if (show_marked) {
-    output << "<rect x=\"570\" y=\"760\" width=\"18\" height=\"12\" "
-           << "fill=\"#f55c45\" stroke=\"#9d1825\"/>\n"
-           << "<text x=\"596\" y=\"771\" font-family=\"sans-serif\" "
-           << "font-size=\"14\">marked elements</text>\n";
-  }
-  output << "</svg>\n";
-}
-
-enum class CleanIndicatorPalette {
-  residual,
-  dual,
-  dwr
-};
-
-void write_clean_indicator_svg(
-    const RegularMesh<kDimension>& mesh,
-    const std::vector<double>& indicator,
-    const std::vector<bool>& marked,
-    const std::string& filename,
-    CleanIndicatorPalette palette,
-    double display_gamma) {
-  std::ofstream output(filename.c_str());
-  if (!output) {
-    throw std::runtime_error("Cannot open " + filename);
-  }
-  const Bounds bounds = mesh_bounds(mesh);
-  const double maximum =
-      *std::max_element(indicator.begin(), indicator.end());
-
-  int dark_red = 217;
-  int dark_green = 93;
-  int dark_blue = 32;
-  if (palette == CleanIndicatorPalette::dual) {
-    dark_red = 15;
-    dark_green = 118;
-    dark_blue = 110;
-  } else if (palette == CleanIndicatorPalette::dwr) {
-    dark_red = 109;
-    dark_green = 66;
-    dark_blue = 194;
-  }
-  const int light_red = 249;
-  const int light_green = 248;
-  const int light_blue = 241;
-
-  output << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-         << "viewBox=\"0 0 800 800\">\n"
-         << "<rect width=\"800\" height=\"800\" fill=\"white\"/>\n";
-  output << std::setprecision(10);
-  for (unsigned int element_index = 0;
-       element_index < mesh.n_geometry(kDimension); ++element_index) {
-    const GeometryBM& element = mesh.geometry(kDimension, element_index);
-    const double normalized = maximum > 0.0
-                                  ? indicator[element_index] / maximum
-                                  : 0.0;
-    const double focused = std::pow(normalized, display_gamma);
-    const int red = static_cast<int>(std::lround(
-        light_red + (dark_red - light_red) * focused));
-    const int green = static_cast<int>(std::lround(
-        light_green + (dark_green - light_green) * focused));
-    const int blue = static_cast<int>(std::lround(
-        light_blue + (dark_blue - light_blue) * focused));
-    output << "<polygon points=\"";
-    for (int vertex = 0; vertex < element.n_vertex(); ++vertex) {
-      const Point<kDimension>& point = mesh.point(element.vertex(vertex));
-      output << svg_x(point[0], bounds) << ',' << svg_y(point[1], bounds)
-             << ' ';
-    }
-    const bool is_marked = marked[element_index];
-    output << "\" fill=\"rgb(" << red << ',' << green << ',' << blue
-           << ")\" stroke=\""
-           << (is_marked ? "#172033" : "#8796a5")
-           << "\" stroke-width=\""
-           << (is_marked ? "2.0" : "0.48")
-           << "\" stroke-linejoin=\"round\"/>\n";
-  }
-  output << "</svg>\n";
 }
 
 void write_indicator_data(const RegularMesh<kDimension>& mesh,
                           const std::vector<double>& eta_squared,
+                          const std::vector<double>& strong_residual_squared,
                           const std::vector<double>& cell_residual_squared,
                           const std::vector<double>& interior_jump_squared,
                           const std::vector<double>& neumann_boundary_squared,
@@ -753,7 +586,8 @@ void write_indicator_data(const RegularMesh<kDimension>& mesh,
   if (!output) {
     throw std::runtime_error("Cannot open " + filename);
   }
-  output << "# element centroid_x centroid_y eta_squared cell_squared "
+  output << "# element centroid_x centroid_y eta_squared "
+         << "strong_residual_mean_squared cell_squared "
          << "interior_jump_squared neumann_boundary_squared marked\n";
   output << std::scientific << std::setprecision(12);
   for (unsigned int element_index = 0;
@@ -770,110 +604,12 @@ void write_indicator_data(const RegularMesh<kDimension>& mesh,
     y /= element.n_vertex();
     output << element_index << ' ' << x << ' ' << y << ' '
            << eta_squared[element_index] << ' '
+           << strong_residual_squared[element_index] << ' '
            << cell_residual_squared[element_index] << ' '
            << interior_jump_squared[element_index] << ' '
            << neumann_boundary_squared[element_index] << ' '
            << (marked[element_index] ? 1 : 0) << '\n';
   }
-}
-
-void write_dual_magnitude_svg(
-    const RegularMesh<kDimension>& mesh,
-    const std::vector<double>& magnitude,
-    const std::vector<bool>& marked,
-    const std::string& filename,
-    const std::string& caption,
-    bool show_marked) {
-  std::ofstream output(filename.c_str());
-  if (!output) {
-    throw std::runtime_error("Cannot open " + filename);
-  }
-  const Bounds bounds = mesh_bounds(mesh);
-  const double maximum =
-      *std::max_element(magnitude.begin(), magnitude.end());
-
-  output << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-         << "viewBox=\"0 0 800 800\">\n"
-         << "<rect width=\"800\" height=\"800\" fill=\"white\"/>\n"
-         << "<text x=\"400\" y=\"30\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"20\">"
-         << caption << "</text>\n";
-  output << std::setprecision(10);
-
-  for (unsigned int element_index = 0;
-       element_index < mesh.n_geometry(kDimension); ++element_index) {
-    const GeometryBM& element = mesh.geometry(kDimension, element_index);
-    const double normalized =
-        maximum > 0.0 ? magnitude[element_index] / maximum : 0.0;
-    // The display exponent suppresses the small global tail of the elliptic
-    // dual while leaving the computed values unchanged.
-    const double focused = std::pow(normalized, kDualColorGamma);
-    const int red = static_cast<int>(244.0 - 210.0 * focused);
-    const int green = static_cast<int>(247.0 - 130.0 * focused);
-    const int blue = static_cast<int>(242.0 - 100.0 * focused);
-    output << "<polygon points=\"";
-    for (int vertex = 0; vertex < element.n_vertex(); ++vertex) {
-      const Point<kDimension>& point = mesh.point(element.vertex(vertex));
-      output << svg_x(point[0], bounds) << ',' << svg_y(point[1], bounds)
-             << ' ';
-    }
-    const bool is_marked = show_marked && marked[element_index];
-    output << "\" fill=\"rgb(" << red << ',' << green << ',' << blue
-           << ")\" stroke=\""
-           << (is_marked ? "#9d1825" : "#738496")
-           << "\" stroke-width=\""
-           << (is_marked ? "1.8" : "0.45") << "\"/>\n";
-  }
-
-  const double distractor_x = svg_x(kDistractorCenterX, bounds);
-  const double distractor_y = svg_y(kDistractorCenterY, bounds);
-  const double distractor_radius_x =
-      690.0 * kDistractorSigmaX / (bounds.xmax - bounds.xmin);
-  const double distractor_radius_y =
-      690.0 * kDistractorSigmaY / (bounds.ymax - bounds.ymin);
-  const double target_x = svg_x(kTargetCenterX, bounds);
-  const double target_y = svg_y(kTargetCenterY, bounds);
-  const double target_radius =
-      690.0 * kTargetSigma / (bounds.xmax - bounds.xmin);
-  const double sensor_x = svg_x(kSensorCenterX, bounds);
-  const double sensor_y = svg_y(kSensorCenterY, bounds);
-  const double sensor_radius =
-      690.0 * kSensorSigma / (bounds.xmax - bounds.xmin);
-  output << "<ellipse cx=\"" << distractor_x << "\" cy=\"" << distractor_y
-         << "\" rx=\"" << distractor_radius_x
-         << "\" ry=\"" << distractor_radius_y
-         << "\" fill=\"none\" stroke=\"#d97706\" stroke-width=\"2.5\"/>\n"
-         << "<text x=\"" << distractor_x + distractor_radius_x + 7.0
-         << "\" y=\"" << distractor_y - 5.0
-         << "\" font-family=\"sans-serif\" font-size=\"13\" "
-         << "fill=\"#92400e\">strong distractor heater</text>\n"
-         << "<circle cx=\"" << target_x << "\" cy=\"" << target_y
-         << "\" r=\"" << target_radius
-         << "\" fill=\"none\" stroke=\"#ca8a04\" stroke-width=\"2\" "
-         << "stroke-dasharray=\"6 4\"/>\n"
-         << "<text x=\"" << target_x - target_radius - 8.0
-         << "\" y=\"" << target_y + target_radius + 16.0
-         << "\" text-anchor=\"end\" font-family=\"sans-serif\" "
-         << "font-size=\"13\" fill=\"#854d0e\">smooth target heater</text>\n"
-         << "<circle cx=\"" << sensor_x << "\" cy=\"" << sensor_y
-         << "\" r=\"" << sensor_radius
-         << "\" fill=\"none\" stroke=\"#116466\" stroke-width=\"3\"/>\n"
-         << "<text x=\"" << sensor_x - sensor_radius - 8.0
-         << "\" y=\"" << sensor_y - 5.0
-         << "\" text-anchor=\"end\" font-family=\"sans-serif\" "
-         << "font-size=\"13\" fill=\"#116466\">sensor</text>\n";
-  if (show_marked) {
-    output << "<rect x=\"505\" y=\"760\" width=\"18\" height=\"12\" "
-           << "fill=\"#f55c45\" stroke=\"#9d1825\"/>\n"
-           << "<text x=\"531\" y=\"771\" font-family=\"sans-serif\" "
-           << "font-size=\"13\">marked elements</text>\n";
-  } else {
-    output << "<text x=\"55\" y=\"775\" font-family=\"sans-serif\" "
-           << "font-size=\"13\">color contrast exponent = "
-           << kDualColorGamma << "; max |psi| = " << maximum
-           << "</text>\n";
-  }
-  output << "</svg>\n";
 }
 
 void write_dual_magnitude_data(
@@ -903,94 +639,6 @@ void write_dual_magnitude_data(
            << magnitude[element_index] << ' '
            << (marked[element_index] ? 1 : 0) << '\n';
   }
-}
-
-void write_discrete_dual_svg(
-    const RegularMesh<kDimension>& mesh,
-    FEMSpace<double, kDimension>& fem_space,
-    const FEMFunction<double, kDimension>& dual,
-    const std::string& filename) {
-  std::ofstream output(filename.c_str());
-  if (!output) {
-    throw std::runtime_error("Cannot open " + filename);
-  }
-
-  std::vector<double> values(mesh.n_geometry(kDimension), 0.0);
-  double minimum = 0.0;
-  double maximum = 0.0;
-  for (unsigned int element_index = 0;
-       element_index < mesh.n_geometry(kDimension); ++element_index) {
-    const GeometryBM& geometry =
-        mesh.geometry(kDimension, element_index);
-    Point<kDimension> centroid;
-    centroid[0] = 0.0;
-    centroid[1] = 0.0;
-    for (int vertex = 0; vertex < geometry.n_vertex(); ++vertex) {
-      const Point<kDimension>& point = mesh.point(geometry.vertex(vertex));
-      centroid[0] += point[0];
-      centroid[1] += point[1];
-    }
-    centroid[0] /= geometry.n_vertex();
-    centroid[1] /= geometry.n_vertex();
-    values[element_index] =
-        dual.value(centroid, fem_space.element(element_index));
-    minimum = std::min(minimum, values[element_index]);
-    maximum = std::max(maximum, values[element_index]);
-  }
-
-  const double scale = std::max(std::abs(minimum), std::abs(maximum));
-  const Bounds bounds = mesh_bounds(mesh);
-  output << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-         << "viewBox=\"0 0 800 800\">\n"
-         << "<rect width=\"800\" height=\"800\" fill=\"white\"/>\n"
-         << "<text x=\"400\" y=\"30\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"20\">"
-         << "Fully discrete dual: A^T psi_h = -grad J_h</text>\n";
-  output << std::setprecision(10);
-
-  for (unsigned int element_index = 0;
-       element_index < mesh.n_geometry(kDimension); ++element_index) {
-    const GeometryBM& element = mesh.geometry(kDimension, element_index);
-    const double signed_ratio =
-        scale > 0.0 ? values[element_index] / scale : 0.0;
-    const double magnitude = std::abs(signed_ratio);
-    int red = 248;
-    int green = 247;
-    int blue = 242;
-    if (signed_ratio < 0.0) {
-      red = static_cast<int>(248.0 - 60.0 * magnitude);
-      green = static_cast<int>(242.0 - 175.0 * magnitude);
-      blue = static_cast<int>(232.0 - 190.0 * magnitude);
-    } else {
-      red = static_cast<int>(235.0 - 175.0 * magnitude);
-      green = static_cast<int>(245.0 - 105.0 * magnitude);
-      blue = static_cast<int>(250.0 - 25.0 * magnitude);
-    }
-    output << "<polygon points=\"";
-    for (int vertex = 0; vertex < element.n_vertex(); ++vertex) {
-      const Point<kDimension>& point = mesh.point(element.vertex(vertex));
-      output << svg_x(point[0], bounds) << ',' << svg_y(point[1], bounds)
-             << ' ';
-    }
-    output << "\" fill=\"rgb(" << red << ',' << green << ',' << blue
-           << ")\" stroke=\"#738496\" stroke-width=\"0.45\"/>\n";
-  }
-
-  const double sensor_x = svg_x(kSensorCenterX, bounds);
-  const double sensor_y = svg_y(kSensorCenterY, bounds);
-  const double sensor_radius =
-      690.0 * kSensorSigma / (bounds.xmax - bounds.xmin);
-  output << "<circle cx=\"" << sensor_x << "\" cy=\"" << sensor_y
-         << "\" r=\"" << sensor_radius
-         << "\" fill=\"none\" stroke=\"#116466\" stroke-width=\"3\"/>\n"
-         << "<text x=\"" << sensor_x + sensor_radius + 8.0
-         << "\" y=\"" << sensor_y - 5.0
-         << "\" font-family=\"sans-serif\" font-size=\"14\" "
-         << "fill=\"#116466\">sensor footprint</text>\n"
-         << "<text x=\"55\" y=\"775\" font-family=\"sans-serif\" "
-         << "font-size=\"14\">min psi_h = " << minimum
-         << ", max psi_h = " << maximum << "</text>\n"
-         << "</svg>\n";
 }
 
 void write_discrete_dual_data(
@@ -1196,10 +844,6 @@ DiscreteDualResult solve_discrete_dual(
   }
 
   dual.writeOpenDXData(output_stem + ".dx");
-  write_discrete_dual_svg(mesh,
-                          fem_space,
-                          dual,
-                          output_stem + ".svg");
   write_discrete_dual_data(fem_space,
                            dual,
                            output_stem + ".dat");
@@ -1691,9 +1335,10 @@ void write_functional_comparison_data(
     const std::vector<FunctionalRecord>& dwr_records,
     double reference_value,
     double reference_change) {
-  std::ofstream output("functional_comparison.dat");
+  const std::string filename = "summary/functional_comparison.dat";
+  std::ofstream output(filename.c_str());
   if (!output) {
-    throw std::runtime_error("Cannot open functional_comparison.dat");
+    throw std::runtime_error("Cannot open " + filename);
   }
   output << "# spectral_reference " << std::scientific
          << std::setprecision(14) << reference_value << '\n'
@@ -1713,278 +1358,6 @@ void write_functional_comparison_data(
   write_records("dwr", dwr_records);
 }
 
-double plot_x(int dofs, int minimum_dofs, int maximum_dofs) {
-  if (maximum_dofs == minimum_dofs) {
-    return 80.0;
-  }
-  return 80.0 + 650.0 * (dofs - minimum_dofs) /
-                    static_cast<double>(maximum_dofs - minimum_dofs);
-}
-
-void write_functional_value_svg(
-    const std::vector<FunctionalRecord>& residual_records,
-    const std::vector<FunctionalRecord>& dual_records,
-    const std::vector<FunctionalRecord>& dwr_records,
-    double reference_value) {
-  int minimum_dofs = residual_records.front().degrees_of_freedom;
-  int maximum_dofs = minimum_dofs;
-  double minimum_value = residual_records.front().value;
-  double maximum_value = minimum_value;
-  for (const std::vector<FunctionalRecord>* records :
-       {&residual_records, &dual_records, &dwr_records}) {
-    for (const FunctionalRecord& record : *records) {
-      minimum_dofs = std::min(minimum_dofs, record.degrees_of_freedom);
-      maximum_dofs = std::max(maximum_dofs, record.degrees_of_freedom);
-      minimum_value = std::min(minimum_value, record.value);
-      maximum_value = std::max(maximum_value, record.value);
-    }
-  }
-  const double value_span = std::max(maximum_value - minimum_value, 1.0e-12);
-  const double padding = 0.15 * value_span;
-  minimum_value -= padding;
-  maximum_value += padding;
-  const auto y_coordinate = [&](double value) {
-    return 440.0 - 350.0 * (value - minimum_value) /
-                       (maximum_value - minimum_value);
-  };
-
-  std::ofstream output("functional_value_vs_dofs.svg");
-  if (!output) {
-    throw std::runtime_error("Cannot open functional_value_vs_dofs.svg");
-  }
-  output << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-         << "viewBox=\"0 0 800 520\">\n"
-         << "<rect width=\"800\" height=\"520\" fill=\"white\"/>\n"
-         << "<text x=\"400\" y=\"32\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"21\">"
-         << "Target functional versus degrees of freedom</text>\n"
-         << "<line x1=\"80\" y1=\"440\" x2=\"730\" y2=\"440\" "
-         << "stroke=\"#374151\"/>\n"
-         << "<line x1=\"80\" y1=\"90\" x2=\"80\" y2=\"440\" "
-         << "stroke=\"#374151\"/>\n";
-  output << std::setprecision(10);
-  for (int tick = 0; tick <= 5; ++tick) {
-    const double ratio = tick / 5.0;
-    const int dofs = static_cast<int>(std::lround(
-        minimum_dofs + ratio * (maximum_dofs - minimum_dofs)));
-    const double x = plot_x(dofs, minimum_dofs, maximum_dofs);
-    const double value = minimum_value + ratio *
-                         (maximum_value - minimum_value);
-    const double y = y_coordinate(value);
-    output << "<line x1=\"" << x << "\" y1=\"440\" x2=\"" << x
-           << "\" y2=\"446\" stroke=\"#374151\"/>\n"
-           << "<text x=\"" << x << "\" y=\"466\" text-anchor=\"middle\" "
-           << "font-family=\"sans-serif\" font-size=\"12\">" << dofs
-           << "</text>\n"
-           << "<line x1=\"74\" y1=\"" << y << "\" x2=\"80\" y2=\""
-           << y << "\" stroke=\"#374151\"/>\n"
-           << "<text x=\"68\" y=\"" << y + 4.0
-           << "\" text-anchor=\"end\" font-family=\"sans-serif\" "
-           << "font-size=\"12\">" << std::fixed << std::setprecision(5)
-           << value << "</text>\n";
-  }
-  output << "<text x=\"725\" y=\"84\" text-anchor=\"end\" "
-         << "font-family=\"sans-serif\" font-size=\"11\">"
-         << "spectral reference J = " << std::fixed << std::setprecision(8)
-         << reference_value << " (outside vertical scale)</text>\n";
-
-  const auto write_series = [&](const std::vector<FunctionalRecord>& records,
-                                const char* color,
-                                int marker) {
-    for (std::size_t index = 1; index < records.size(); ++index) {
-      const FunctionalRecord& previous = records[index - 1];
-      const FunctionalRecord& current = records[index];
-      output << "<line x1=\""
-             << plot_x(previous.degrees_of_freedom,
-                       minimum_dofs,
-                       maximum_dofs)
-             << "\" y1=\"" << y_coordinate(previous.value)
-             << "\" x2=\""
-             << plot_x(current.degrees_of_freedom,
-                       minimum_dofs,
-                       maximum_dofs)
-             << "\" y2=\"" << y_coordinate(current.value)
-             << "\" stroke=\"" << color
-             << "\" stroke-width=\"3\"/>\n";
-    }
-    for (const FunctionalRecord& record : records) {
-      const double x = plot_x(record.degrees_of_freedom,
-                              minimum_dofs,
-                              maximum_dofs);
-      const double y = y_coordinate(record.value);
-      if (marker == 0) {
-        output << "<circle cx=\"" << x << "\" cy=\"" << y
-               << "\" r=\"5\" fill=\"" << color << "\"/>\n";
-      } else if (marker == 1) {
-        output << "<rect x=\"" << x - 4.5 << "\" y=\"" << y - 4.5
-               << "\" width=\"9\" height=\"9\" fill=\"" << color
-               << "\"/>\n";
-      } else {
-        output << "<polygon points=\"" << x << ',' << y - 5.5 << ' '
-               << x - 5.0 << ',' << y + 4.5 << ' '
-               << x + 5.0 << ',' << y + 4.5
-               << "\" fill=\"" << color << "\"/>\n";
-      }
-    }
-  };
-  write_series(residual_records, "#d97706", 0);
-  write_series(dual_records, "#0f766e", 1);
-  write_series(dwr_records, "#7c3aed", 2);
-  output << "<circle cx=\"115\" cy=\"62\" r=\"5\" fill=\"#d97706\"/>\n"
-         << "<text x=\"128\" y=\"66\" font-family=\"sans-serif\" "
-         << "font-size=\"13\">residual refinement</text>\n"
-         << "<rect x=\"295\" y=\"57\" width=\"10\" height=\"10\" "
-         << "fill=\"#0f766e\"/>\n"
-         << "<text x=\"313\" y=\"66\" font-family=\"sans-serif\" "
-         << "font-size=\"13\">dual-magnitude refinement</text>\n"
-         << "<polygon points=\"585,56 580,66 590,66\" "
-         << "fill=\"#7c3aed\"/>\n"
-         << "<text x=\"598\" y=\"66\" font-family=\"sans-serif\" "
-         << "font-size=\"13\">DWR refinement</text>\n"
-         << "<text x=\"405\" y=\"500\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"14\">degrees of freedom</text>\n"
-         << "<text x=\"18\" y=\"270\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"14\" "
-         << "transform=\"rotate(-90 18 270)\">J(T_h)</text>\n"
-         << "</svg>\n";
-}
-
-void write_functional_error_svg(
-    const std::vector<FunctionalRecord>& residual_records,
-    const std::vector<FunctionalRecord>& dual_records,
-    const std::vector<FunctionalRecord>& dwr_records,
-    double reference_value) {
-  int minimum_dofs = residual_records.front().degrees_of_freedom;
-  int maximum_dofs = minimum_dofs;
-  double minimum_error =
-      std::abs(residual_records.front().value - reference_value);
-  double maximum_error = minimum_error;
-  for (const std::vector<FunctionalRecord>* records :
-       {&residual_records, &dual_records, &dwr_records}) {
-    for (const FunctionalRecord& record : *records) {
-      minimum_dofs = std::min(minimum_dofs, record.degrees_of_freedom);
-      maximum_dofs = std::max(maximum_dofs, record.degrees_of_freedom);
-      const double error = std::abs(record.value - reference_value);
-      minimum_error = std::min(minimum_error, error);
-      maximum_error = std::max(maximum_error, error);
-    }
-  }
-  double minimum_log_error = std::log10(minimum_error);
-  double maximum_log_error = std::log10(maximum_error);
-  const double log_span =
-      std::max(maximum_log_error - minimum_log_error, 1.0);
-  minimum_log_error -= 0.08 * log_span;
-  maximum_log_error += 0.08 * log_span;
-  const auto y_coordinate = [&](double error) {
-    return 440.0 - 350.0 * (std::log10(error) - minimum_log_error) /
-                       (maximum_log_error - minimum_log_error);
-  };
-
-  std::ofstream output("functional_error_vs_dofs.svg");
-  if (!output) {
-    throw std::runtime_error("Cannot open functional_error_vs_dofs.svg");
-  }
-  output << "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-         << "viewBox=\"0 0 800 520\">\n"
-         << "<rect width=\"800\" height=\"520\" fill=\"white\"/>\n"
-         << "<text x=\"400\" y=\"32\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"21\">"
-         << "Target functional error versus degrees of freedom (log scale)"
-         << "</text>\n"
-         << "<line x1=\"80\" y1=\"440\" x2=\"730\" y2=\"440\" "
-         << "stroke=\"#374151\"/>\n"
-         << "<line x1=\"80\" y1=\"90\" x2=\"80\" y2=\"440\" "
-         << "stroke=\"#374151\"/>\n";
-  output << std::setprecision(10);
-  for (int tick = 0; tick <= 5; ++tick) {
-    const double ratio = tick / 5.0;
-    const int dofs = static_cast<int>(std::lround(
-        minimum_dofs + ratio * (maximum_dofs - minimum_dofs)));
-    const double x = plot_x(dofs, minimum_dofs, maximum_dofs);
-    output << "<line x1=\"" << x << "\" y1=\"440\" x2=\"" << x
-           << "\" y2=\"446\" stroke=\"#374151\"/>\n"
-           << "<text x=\"" << x << "\" y=\"466\" text-anchor=\"middle\" "
-           << "font-family=\"sans-serif\" font-size=\"12\">" << dofs
-           << "</text>\n";
-  }
-  for (int tick = 0; tick <= 5; ++tick) {
-    const double ratio = tick / 5.0;
-    const double error = std::pow(
-        10.0,
-        minimum_log_error + ratio *
-            (maximum_log_error - minimum_log_error));
-    const double y = y_coordinate(error);
-    output << "<line x1=\"80\" y1=\"" << y << "\" x2=\"730\" y2=\""
-           << y << "\" stroke=\"#d1d5db\" stroke-width=\"0.8\"/>\n"
-           << "<text x=\"68\" y=\"" << y + 4.0
-           << "\" text-anchor=\"end\" font-family=\"sans-serif\" "
-           << "font-size=\"12\">" << std::scientific
-           << std::setprecision(1)
-           << error << "</text>\n";
-  }
-  output << std::defaultfloat << std::setprecision(10);
-  const auto write_series = [&](const std::vector<FunctionalRecord>& records,
-                                const char* color,
-                                int marker) {
-    for (std::size_t index = 1; index < records.size(); ++index) {
-      const FunctionalRecord& previous = records[index - 1];
-      const FunctionalRecord& current = records[index];
-      output << "<line x1=\""
-             << plot_x(previous.degrees_of_freedom,
-                       minimum_dofs,
-                       maximum_dofs)
-             << "\" y1=\""
-             << y_coordinate(std::abs(previous.value - reference_value))
-             << "\" x2=\""
-             << plot_x(current.degrees_of_freedom,
-                       minimum_dofs,
-                       maximum_dofs)
-             << "\" y2=\""
-             << y_coordinate(std::abs(current.value - reference_value))
-             << "\" stroke=\"" << color
-             << "\" stroke-width=\"3\"/>\n";
-    }
-    for (const FunctionalRecord& record : records) {
-      const double x = plot_x(record.degrees_of_freedom,
-                              minimum_dofs,
-                              maximum_dofs);
-      const double y = y_coordinate(std::abs(record.value - reference_value));
-      if (marker == 0) {
-        output << "<circle cx=\"" << x << "\" cy=\"" << y
-               << "\" r=\"5\" fill=\"" << color << "\"/>\n";
-      } else if (marker == 1) {
-        output << "<rect x=\"" << x - 4.5 << "\" y=\"" << y - 4.5
-               << "\" width=\"9\" height=\"9\" fill=\"" << color
-               << "\"/>\n";
-      } else {
-        output << "<polygon points=\"" << x << ',' << y - 5.5 << ' '
-               << x - 5.0 << ',' << y + 4.5 << ' '
-               << x + 5.0 << ',' << y + 4.5
-               << "\" fill=\"" << color << "\"/>\n";
-      }
-    }
-  };
-  write_series(residual_records, "#d97706", 0);
-  write_series(dual_records, "#0f766e", 1);
-  write_series(dwr_records, "#7c3aed", 2);
-  output << "<circle cx=\"115\" cy=\"62\" r=\"5\" fill=\"#d97706\"/>\n"
-         << "<text x=\"128\" y=\"66\" font-family=\"sans-serif\" "
-         << "font-size=\"13\">residual refinement</text>\n"
-         << "<rect x=\"295\" y=\"57\" width=\"10\" height=\"10\" "
-         << "fill=\"#0f766e\"/>\n"
-         << "<text x=\"313\" y=\"66\" font-family=\"sans-serif\" "
-         << "font-size=\"13\">dual-magnitude refinement</text>\n"
-         << "<polygon points=\"585,56 580,66 590,66\" "
-         << "fill=\"#7c3aed\"/>\n"
-         << "<text x=\"598\" y=\"66\" font-family=\"sans-serif\" "
-         << "font-size=\"13\">DWR refinement</text>\n"
-         << "<text x=\"405\" y=\"500\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"14\">degrees of freedom</text>\n"
-         << "<text x=\"18\" y=\"270\" text-anchor=\"middle\" "
-         << "font-family=\"sans-serif\" font-size=\"14\" "
-         << "transform=\"rotate(-90 18 270)\">|J-J_ref|</text>\n"
-         << "</svg>\n";
-}
 
 }  // namespace
 
@@ -2057,6 +1430,8 @@ int main(int argc, char* argv[]) {
   }
 
   try {
+    prepare_output_directories();
+
     TemplateGeometry<kDimension> triangle_geometry;
     triangle_geometry.readData("triangle.tmp_geo");
     CoordTransform<kDimension, kDimension> triangle_transform;
@@ -2108,7 +1483,7 @@ int main(int argc, char* argv[]) {
           spectral_reference_sensor_temperature(
               kReferenceModes, kReferenceIntervals);
       const std::string output_filename =
-          "uniform_reference_level_" +
+          "summary/uniform_reference_level_" +
           std::to_string(uniform_reference_level) + ".dat";
       std::ofstream reference_output(output_filename.c_str());
       reference_output << std::scientific << std::setprecision(14)
@@ -2147,8 +1522,6 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
     }
 
-    std::filesystem::create_directories("teaching");
-
     HGeometryTree<kDimension> hierarchy;
     hierarchy.readEasyMesh(root_mesh);
     IrregularMesh<kDimension> irregular_mesh(hierarchy);
@@ -2160,51 +1533,23 @@ int main(int argc, char* argv[]) {
       RegularMesh<kDimension>& current_mesh = irregular_mesh.regularMesh();
       const std::string state_suffix = std::to_string(round - 1);
       const std::string mesh_prefix =
-          round == 1 ? "mesh_before" : "mesh_round_" + state_suffix;
+          "meshes/residual/level_" + state_suffix;
       const std::string temperature_filename =
-          round == 1 ? "temperature_before.dx"
-                     : "temperature_round_" + state_suffix + ".dx";
+          "fields/residual/temperature_level_" + state_suffix + ".dx";
 
       current_mesh.writeOpenDXData(mesh_prefix + ".dx");
-      write_mesh_edges_svg(
-          current_mesh,
-          mesh_prefix + ".svg",
-          "Mesh before residual refinement round " +
-              std::to_string(round));
       if (round == 1) {
-        const std::vector<bool> no_marks(
-            current_mesh.n_geometry(kDimension), false);
         const std::vector<double> source_samples =
             sample_at_element_centroids(current_mesh,
                                         &heat_source_at_point);
         const std::vector<double> sensor_samples =
             sample_at_element_centroids(current_mesh, &sensor_weight);
-        write_indicator_svg(
-            current_mesh,
-            source_samples,
-            no_marks,
-            "source_profile.svg",
-            "PDE source f: strong distractor and smooth target heater",
-            false);
-        write_indicator_svg(
-            current_mesh,
-            sensor_samples,
-            no_marks,
-            "sensor_weight.svg",
-            "Normalized sensor weight w",
-            false);
-        write_clean_indicator_svg(current_mesh,
-                                  source_samples,
-                                  no_marks,
-                                  "teaching/source_profile_clean.svg",
-                                  CleanIndicatorPalette::residual,
-                                  0.5);
-        write_clean_indicator_svg(current_mesh,
-                                  sensor_samples,
-                                  no_marks,
-                                  "teaching/sensor_weight_clean.svg",
-                                  CleanIndicatorPalette::dual,
-                                  kDualColorGamma);
+        write_cell_field_data(current_mesh,
+                              source_samples,
+                              "fields/problem/source_profile.dat");
+        write_cell_field_data(current_mesh,
+                              sensor_samples,
+                              "fields/problem/sensor_weight.dat");
       }
 
       const SolveResult current = solve_temperature(
@@ -2226,75 +1571,25 @@ int main(int argc, char* argv[]) {
       const int marked_count = static_cast<int>(
           std::count(marked.begin(), marked.end(), true));
       const std::string indicator_stem =
-          "residual_indicator_round_" + std::to_string(round);
+          "fields/residual/indicator_round_" + std::to_string(round);
 
       write_indicator_data(current_mesh,
                            current.eta_squared,
+                           current.strong_residual_mean_squared,
                            current.cell_residual_squared,
                            current.interior_jump_squared,
                            current.neumann_boundary_squared,
                            marked,
                            indicator_stem + ".dat");
-      write_indicator_svg(
-          current_mesh,
-          marking_indicator,
-          marked,
-          indicator_stem + ".svg",
-          "Cell residual with top 5% marks, round " +
-              std::to_string(round));
-      if (round == 1 || round == residual_rounds) {
-        write_clean_indicator_svg(
-            current_mesh,
-            marking_indicator,
-            marked,
-            "teaching/residual_indicator_round_" +
-                std::to_string(round) + "_clean.svg",
-            CleanIndicatorPalette::residual,
-            0.5);
-      }
       if (round == residual_rounds) {
         write_indicator_data(current_mesh,
                              current.eta_squared,
+                             current.strong_residual_mean_squared,
                              current.cell_residual_squared,
                              current.interior_jump_squared,
                              current.neumann_boundary_squared,
                              marked,
-                             "residual_indicator.dat");
-        write_indicator_svg(current_mesh,
-                            marking_indicator,
-                            marked,
-                            "residual_indicator.svg",
-                            "Marking indicator: h^2 times cell residual");
-        write_indicator_svg(current_mesh,
-                            current.strong_residual_mean_squared,
-                            marked,
-                            "strong_residual.svg",
-                            "Strong residual RMS (independent of mesh size)",
-                            false);
-        write_indicator_svg(current_mesh,
-                            current.eta_squared,
-                            marked,
-                            "residual_raw.svg",
-                            "Full residual estimator (diagnostic only)",
-                            false);
-        write_indicator_svg(current_mesh,
-                            current.cell_residual_squared,
-                            marked,
-                            "residual_cell_component.svg",
-                            "Cell residual contribution",
-                            false);
-        write_indicator_svg(current_mesh,
-                            current.interior_jump_squared,
-                            marked,
-                            "residual_jump_component.svg",
-                            "Interior flux-jump contribution",
-                            false);
-        write_indicator_svg(current_mesh,
-                            current.neumann_boundary_squared,
-                            marked,
-                            "residual_neumann_component.svg",
-                            "Neumann-boundary contribution",
-                            false);
+                             "fields/residual/indicator_final.dat");
       }
 
       adapt_with_afepack_quantile(irregular_mesh,
@@ -2317,16 +1612,11 @@ int main(int argc, char* argv[]) {
     }
 
     RegularMesh<kDimension>& mesh_after = irregular_mesh.regularMesh();
-    mesh_after.writeOpenDXData("mesh_after.dx");
-    write_mesh_edges_svg(
-        mesh_after,
-        "mesh_after.svg",
-        "Mesh after 5% residual refinement");
-    write_clean_mesh_svg(mesh_after, "teaching/residual_mesh_final_clean.svg");
+    mesh_after.writeOpenDXData("meshes/residual/final.dx");
     const SolveResult after = solve_temperature(
         mesh_after,
         template_elements,
-        "temperature_after.dx",
+        "fields/residual/temperature_final.dx",
         false);
 
     const double reference_value = spectral_reference_sensor_temperature(
@@ -2349,9 +1639,11 @@ int main(int argc, char* argv[]) {
         after.degrees_of_freedom,
         after.sensor_temperature});
 
-    std::ofstream functional_history("functional_history.dat");
+    const std::string residual_history_filename =
+        "summary/residual_history.dat";
+    std::ofstream functional_history(residual_history_filename.c_str());
     if (!functional_history) {
-      throw std::runtime_error("Cannot open functional_history.dat");
+      throw std::runtime_error("Cannot open " + residual_history_filename);
     }
     functional_history
         << "# spectral_reference " << reference_value << '\n'
@@ -2378,48 +1670,28 @@ int main(int argc, char* argv[]) {
       RegularMesh<kDimension>& dual_mesh =
           dual_irregular_mesh.regularMesh();
       const std::string round_string = std::to_string(round);
-      write_mesh_edges_svg(
-          dual_mesh,
-          "dual_mesh_round_" + std::to_string(round - 1) + ".svg",
-          "Independent dual mesh before magnitude refinement round " +
-              round_string);
+      dual_mesh.writeOpenDXData(
+          "meshes/dual/level_" + std::to_string(round - 1) + ".dx");
 
       const SolveResult primal_on_dual_mesh = solve_temperature(
           dual_mesh,
           template_elements,
-          "temperature_on_dual_mesh_round_" + round_string + ".dx",
+          "fields/dual/temperature_round_" + round_string + ".dx",
           false);
       const DiscreteDualResult dual_result = solve_discrete_dual(
           dual_mesh,
           template_elements,
-          "dual_signed_round_" + round_string);
+          "fields/dual/signed_round_" + round_string);
       const ProportionalMarking dual_marking = mark_largest_fraction(
           dual_result.element_rms_magnitude, kRefineFraction);
       const std::vector<bool>& dual_marked = dual_marking.marked;
       const int dual_marked_count = static_cast<int>(
           std::count(dual_marked.begin(), dual_marked.end(), true));
-      write_dual_magnitude_svg(
-          dual_mesh,
-          dual_result.element_rms_magnitude,
-          dual_marked,
-          "dual_magnitude_round_" + round_string + ".svg",
-          "Dual magnitude with top 5% marks, round " + round_string,
-          true);
       write_dual_magnitude_data(
           dual_mesh,
           dual_result.element_rms_magnitude,
           dual_marked,
-          "dual_magnitude_round_" + round_string + ".dat");
-      if (round == 1 || round == dual_rounds) {
-        write_clean_indicator_svg(
-            dual_mesh,
-            dual_result.element_rms_magnitude,
-            dual_marked,
-            "teaching/dual_magnitude_round_" + round_string +
-                "_clean.svg",
-            CleanIndicatorPalette::dual,
-            kDualColorGamma);
-      }
+          "fields/dual/magnitude_round_" + round_string + ".dat");
 
       adapt_with_afepack_quantile(dual_irregular_mesh,
                                   dual_mesh,
@@ -2442,34 +1714,22 @@ int main(int argc, char* argv[]) {
 
     RegularMesh<kDimension>& dual_mesh_after =
         dual_irregular_mesh.regularMesh();
-    dual_mesh_after.writeOpenDXData("dual_mesh_after.dx");
-    write_mesh_edges_svg(dual_mesh_after,
-                         "dual_mesh_after.svg",
-                         "Dual mesh after magnitude-based refinement");
-    write_clean_mesh_svg(dual_mesh_after,
-                         "teaching/dual_mesh_final_clean.svg");
+    dual_mesh_after.writeOpenDXData("meshes/dual/final.dx");
     const DiscreteDualResult dual_after = solve_discrete_dual(
         dual_mesh_after,
         template_elements,
-        "dual_signed_after");
+        "fields/dual/signed_final");
     const SolveResult primal_on_dual_mesh_after = solve_temperature(
         dual_mesh_after,
         template_elements,
-        "temperature_on_dual_mesh_after.dx",
+        "fields/dual/temperature_final.dx",
         false);
     const std::vector<bool> no_dual_marks(
         dual_after.element_rms_magnitude.size(), false);
-    write_dual_magnitude_svg(
-        dual_mesh_after,
-        dual_after.element_rms_magnitude,
-        no_dual_marks,
-        "dual_magnitude.svg",
-        "Discrete dual magnitude near the diagonal sensor",
-        false);
     write_dual_magnitude_data(dual_mesh_after,
                               dual_after.element_rms_magnitude,
                               no_dual_marks,
-                              "dual_magnitude.dat");
+                              "fields/dual/magnitude_final.dat");
 
     std::vector<FunctionalRecord> dual_records;
     for (const DualAdaptationReport& report : dual_reports) {
@@ -2484,6 +1744,32 @@ int main(int argc, char* argv[]) {
         static_cast<int>(dual_mesh_after.n_geometry(kDimension)),
         primal_on_dual_mesh_after.degrees_of_freedom,
         primal_on_dual_mesh_after.sensor_temperature});
+
+    const std::string dual_history_filename = "summary/dual_history.dat";
+    std::ofstream dual_history(dual_history_filename.c_str());
+    if (!dual_history) {
+      throw std::runtime_error("Cannot open " + dual_history_filename);
+    }
+    dual_history
+        << "# level elements dofs functional dual_min dual_max "
+           "marked elements_after\n"
+        << std::scientific << std::setprecision(12);
+    for (const DualAdaptationReport& report : dual_reports) {
+      dual_history << report.round - 1 << ' '
+                   << report.elements_before << ' '
+                   << report.dofs_before << ' '
+                   << report.sensor_temperature << ' '
+                   << report.minimum << ' '
+                   << report.maximum << ' '
+                   << report.marked_elements << ' '
+                   << report.elements_after << '\n';
+    }
+    dual_history << dual_rounds << ' '
+                 << dual_mesh_after.n_geometry(kDimension) << ' '
+                 << primal_on_dual_mesh_after.degrees_of_freedom << ' '
+                 << primal_on_dual_mesh_after.sensor_temperature
+                 << " nan nan 0 "
+                 << dual_mesh_after.n_geometry(kDimension) << '\n';
 
     // A third independent sequence uses an absolute adjoint-weighted residual
     // for marking.  The primal remains P1 on the current mesh, while the
@@ -2503,14 +1789,12 @@ int main(int argc, char* argv[]) {
       const int dwr_elements_before =
           dwr_mesh.n_geometry(kDimension);
       const std::string round_string = std::to_string(round);
-      write_mesh_edges_svg(
-          dwr_mesh,
-          "dwr_mesh_round_" + std::to_string(round - 1) + ".svg",
-          "Mesh before DWR refinement round " + round_string);
+      dwr_mesh.writeOpenDXData(
+          "meshes/dwr/level_" + std::to_string(round - 1) + ".dx");
       const DWRResult dwr = compute_dwr_indicator(
           dwr_irregular_mesh,
           template_elements,
-          "temperature_on_dwr_mesh_round_" + round_string + ".dx");
+          "fields/dwr/temperature_round_" + round_string + ".dx");
       const std::vector<double>& dwr_marking_indicator =
           dwr.absolute_element_indicator;
       const ProportionalMarking dwr_marking = mark_largest_fraction(
@@ -2518,55 +1802,17 @@ int main(int argc, char* argv[]) {
       const std::vector<bool>& dwr_marked = dwr_marking.marked;
       const int dwr_marked_count = static_cast<int>(
           std::count(dwr_marked.begin(), dwr_marked.end(), true));
-      write_indicator_svg(
-          dwr_mesh,
-          dwr_marking_indicator,
-          dwr_marked,
-          "dwr_indicator_round_" + round_string + ".svg",
-          "Localized DWR contribution, round " +
-              round_string);
       write_dwr_indicator_data(
           dwr_mesh,
           dwr,
           dwr_marked,
-          "dwr_indicator_round_" + round_string + ".dat");
-      if (round == 1 || round == dwr_rounds) {
-        write_clean_indicator_svg(
-            dwr_mesh,
-            dwr_marking_indicator,
-            dwr_marked,
-            "teaching/dwr_indicator_round_" + round_string +
-                "_clean.svg",
-            CleanIndicatorPalette::dwr,
-            0.5);
-      }
+          "fields/dwr/indicator_round_" + round_string + ".dat");
       if (round == dwr_rounds) {
-        write_indicator_svg(
-            dwr_mesh,
-            dwr_marking_indicator,
-            dwr_marked,
-            "dwr_indicator.svg",
-            "DWR marking: absolute localized residual action");
-        write_indicator_svg(
-            dwr_mesh,
-            dwr.primal_residual_norm,
-            dwr_marked,
-            "dwr_primal_residual_factor.svg",
-            "DWR factor 1: primal cell residual norm");
-        write_indicator_svg(
-            dwr_mesh,
-            dwr.dual_solution_rms,
-            dwr_marked,
-            "dwr_dual_weight_factor.svg",
-            "DWR factor 2: absolute dual RMS");
-        write_indicator_svg(
-            dwr_mesh,
-            dwr.dual_solution_rms,
-            dwr_marked,
-            "dwr_dual_solution_diagnostic.svg",
-            "Discrete dual RMS (diagnostic)");
         write_dwr_indicator_data(
-            dwr_mesh, dwr, dwr_marked, "dwr_indicator.dat");
+            dwr_mesh,
+            dwr,
+            dwr_marked,
+            "fields/dwr/indicator_final.dat");
       }
 
       adapt_with_afepack_quantile(dwr_irregular_mesh,
@@ -2591,16 +1837,11 @@ int main(int argc, char* argv[]) {
 
     RegularMesh<kDimension>& dwr_mesh_after =
         dwr_irregular_mesh.regularMesh();
-    dwr_mesh_after.writeOpenDXData("dwr_mesh_after.dx");
-    write_mesh_edges_svg(dwr_mesh_after,
-                         "dwr_mesh_after.svg",
-                         "Mesh after DWR refinement");
-    write_clean_mesh_svg(dwr_mesh_after,
-                         "teaching/dwr_mesh_final_clean.svg");
+    dwr_mesh_after.writeOpenDXData("meshes/dwr/final.dx");
     const SolveResult primal_on_dwr_mesh_after = solve_temperature(
         dwr_mesh_after,
         template_elements,
-        "temperature_on_dwr_mesh_after.dx",
+        "fields/dwr/temperature_final.dx",
         false);
     std::vector<FunctionalRecord> dwr_records;
     for (const DWRAdaptationReport& report : dwr_reports) {
@@ -2616,9 +1857,10 @@ int main(int argc, char* argv[]) {
         primal_on_dwr_mesh_after.degrees_of_freedom,
         primal_on_dwr_mesh_after.sensor_temperature});
 
-    std::ofstream dwr_history("dwr_history.dat");
+    const std::string dwr_history_filename = "summary/dwr_history.dat";
+    std::ofstream dwr_history(dwr_history_filename.c_str());
     if (!dwr_history) {
-      throw std::runtime_error("Cannot open dwr_history.dat");
+      throw std::runtime_error("Cannot open " + dwr_history_filename);
     }
     dwr_history
         << "# spectral_reference " << std::scientific
@@ -2652,132 +1894,53 @@ int main(int argc, char* argv[]) {
                                      dwr_records,
                                      reference_value,
                                      reference_change);
-    write_functional_value_svg(residual_records,
-                               dual_records,
-                               dwr_records,
-                               reference_value);
-    write_functional_error_svg(residual_records,
-                               dual_records,
-                               dwr_records,
-                               reference_value);
 
-    std::cout << std::setprecision(8)
-              << "Steady heat-conduction Poisson problem\n"
-              << "  distractor source   : (" << kDistractorCenterX << ", "
-              << kDistractorCenterY << "), strength "
-              << kDistractorStrength << ", sigma ("
-              << kDistractorSigmaX << ", "
-              << kDistractorSigmaY << ")\n"
-              << "  target source       : (" << kTargetCenterX << ", "
-              << kTargetCenterY << "), strength "
-              << kTargetStrength << ", sigma "
-              << kTargetSigma << '\n'
-              << "  sensor center       : (" << kSensorCenterX << ", "
-              << kSensorCenterY << ")\n"
-              << "  sensor sigma        : " << kSensorSigma << '\n'
-              << "  marking indicator   : strong cell residual\n"
-              << "  refinement fraction : "
-              << 100.0 * kRefineFraction
-              << "% of active elements per round\n"
-              << "  spectral J_ref      : " << reference_value << '\n'
-              << "  reference change    : " << reference_change << '\n';
-    for (const AdaptationReport& report : reports) {
-      std::cout << "  round " << report.round << '\n'
-                << "    elements before   : " << report.elements_before
-                << '\n'
-                << "    dofs before       : " << report.dofs_before << '\n'
-                << "    estimator         : " << report.estimator << '\n'
-                << "    sensor J(T_h)     : "
-                << report.sensor_temperature << '\n'
-                << "    |J-J_ref|         : "
-                << std::abs(report.sensor_temperature - reference_value)
-                << '\n'
-                << "    marked elements   : " << report.marked_elements
-                << '\n'
-                << "    elements after    : " << report.elements_after
-                << '\n'
-                << "    twin triangles    : "
-                << report.twin_triangles_after << '\n';
-    }
-    std::cout << "  final sensor J(T_h) : " << after.sensor_temperature
-              << '\n'
-              << "  final |J-J_ref|     : "
-              << std::abs(after.sensor_temperature - reference_value)
-              << '\n'
-              << "  final dofs          : " << after.degrees_of_freedom
-              << '\n';
-    std::cout << "Independent discrete dual\n"
-              << "  marking rule        : same 5% fraction as residual\n"
-              << "  color contrast gamma: " << kDualColorGamma << '\n';
-    for (const DualAdaptationReport& report : dual_reports) {
-      std::cout << "  round " << report.round << '\n'
-                << "    elements before   : " << report.elements_before
-                << '\n'
-                << "    dofs before       : " << report.dofs_before << '\n'
-                << "    sensor J(T_h)     : "
-                << report.sensor_temperature << '\n'
-                << "    |J-J_ref|         : "
-                << std::abs(report.sensor_temperature - reference_value)
-                << '\n'
-                << "    dual range        : [" << report.minimum << ", "
-                << report.maximum << "]\n"
-                << "    marked elements   : " << report.marked_elements
-                << '\n'
-                << "    elements after    : " << report.elements_after
-                << '\n';
-    }
-    std::cout << "  final dual range    : [" << dual_after.minimum << ", "
-              << dual_after.maximum << "]\n"
-              << "  final dual dofs     : "
-              << dual_after.degrees_of_freedom << '\n'
-              << "  final sensor J(T_h) : "
-              << primal_on_dual_mesh_after.sensor_temperature << '\n'
-              << "  final |J-J_ref|     : "
-              << std::abs(primal_on_dual_mesh_after.sensor_temperature -
-                          reference_value)
-              << '\n';
-    std::cout << "DWR refinement\n"
-              << "  enriched dual       : P1 on one uniform h-refinement\n"
-              << "  marking rule        : absolute localized DWR contribution\n"
-              << "  refinement fraction : "
-              << 100.0 * kRefineFraction
-              << "% of active elements per round\n";
+    std::cout << "\nRun summary\n"
+              << "  residual / dual / DWR rounds : "
+              << residual_rounds << " / " << dual_rounds << " / "
+              << dwr_rounds << '\n'
+              << "  marked fraction              : "
+              << 100.0 * kRefineFraction << "%\n"
+              << "  spectral reference J_ref     : "
+              << std::scientific << std::setprecision(8)
+              << reference_value << "\n\n"
+              << std::left << std::setw(12) << "strategy"
+              << std::right << std::setw(7) << "level"
+              << std::setw(11) << "elements"
+              << std::setw(9) << "dofs"
+              << std::setw(16) << "J(T_h)"
+              << std::setw(16) << "|J-J_ref|" << '\n';
+    const auto print_records = [&](const char* strategy,
+                                   const std::vector<FunctionalRecord>& records) {
+      for (const FunctionalRecord& record : records) {
+        std::cout << std::left << std::setw(12) << strategy
+                  << std::right << std::setw(7) << record.level
+                  << std::setw(11) << record.elements
+                  << std::setw(9) << record.degrees_of_freedom
+                  << std::setw(16) << record.value
+                  << std::setw(16)
+                  << std::abs(record.value - reference_value) << '\n';
+      }
+    };
+    print_records("residual", residual_records);
+    print_records("dual", dual_records);
+    print_records("DWR", dwr_records);
+
+    std::cout << "\nDWR correction diagnostic\n"
+              << std::left << std::setw(8) << "level"
+              << std::right << std::setw(16) << "eta_signed"
+              << std::setw(16) << "J+eta"
+              << std::setw(16) << "|J+eta-Jref|" << '\n';
     for (const DWRAdaptationReport& report : dwr_reports) {
       const double corrected_functional =
           report.sensor_temperature + report.signed_estimate;
-      std::cout << "  round " << report.round << '\n'
-                << "    elements before   : " << report.elements_before
-                << '\n'
-                << "    primal dofs       : " << report.dofs_before << '\n'
-                << "    enriched dofs     : "
-                << report.enriched_dual_dofs << '\n'
-                << "    sensor J(T_h)     : "
-                << report.sensor_temperature << '\n'
-                << "    |J-J_ref|         : "
-                << std::abs(report.sensor_temperature - reference_value)
-                << '\n'
-                << "    signed estimate   : " << report.signed_estimate
-                << '\n'
-                << "    corrected J       : " << corrected_functional
-                << '\n'
-                << "    |J_corr-J_ref|    : "
+      std::cout << std::left << std::setw(8) << report.round - 1
+                << std::right << std::setw(16) << report.signed_estimate
+                << std::setw(16) << corrected_functional
+                << std::setw(16)
                 << std::abs(corrected_functional - reference_value)
-                << '\n'
-                << "    sum |eta_K|       : " << report.absolute_sum
-                << '\n'
-                << "    marked elements   : " << report.marked_elements
-                << '\n'
-                << "    elements after    : " << report.elements_after
                 << '\n';
     }
-    std::cout << "  final sensor J(T_h) : "
-              << primal_on_dwr_mesh_after.sensor_temperature << '\n'
-              << "  final |J-J_ref|     : "
-              << std::abs(primal_on_dwr_mesh_after.sensor_temperature -
-                          reference_value)
-              << '\n'
-              << "  final primal dofs   : "
-              << primal_on_dwr_mesh_after.degrees_of_freedom << '\n';
   } catch (const std::exception& error) {
     std::cerr << "two_heater_goal_adaptive: " << error.what() << '\n';
     return EXIT_FAILURE;

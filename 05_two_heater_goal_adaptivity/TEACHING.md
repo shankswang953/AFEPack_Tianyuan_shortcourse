@@ -84,35 +84,20 @@ The final primal budgets are comparable:
 | dual magnitude | 10 | 2155 | `6.2579e-5` |
 | localized DWR | 7 | 2107 | `2.0553e-6` |
 
-Finish with `functional_error_vs_dofs.svg`.  The safe conclusion is not that
+Finish with `figures/functional_error_vs_dofs.png`.  The safe conclusion is not that
 every target-error value must decrease monotonically.  It is that, at a
 comparable final budget, DWR allocates the mesh much more effectively for the
 chosen measurement.
 
-## Text-free figure assets
+## Figure assets
 
-All files below contain no title, legend, axis, or annotation.  Add labels in
-Beamer so typography stays consistent with the slides.
+The two final teaching figures distributed with the examples are PNG files:
 
 ```text
-teaching/problem_fields_pair.png
-teaching/source_profile_clean.svg
-teaching/sensor_weight_clean.svg
-
-teaching/indicator_initial_triptych.png
-teaching/residual_indicator_round_1_clean.svg
-teaching/dual_magnitude_round_1_clean.svg
-teaching/dwr_indicator_round_1_clean.svg
-
-teaching/indicator_final_triptych.png
-teaching/residual_indicator_round_10_clean.svg
-teaching/dual_magnitude_round_10_clean.svg
-teaching/dwr_indicator_round_7_clean.svg
-
-teaching/final_meshes_triptych.png
-teaching/residual_mesh_final_clean.svg
-teaching/dual_mesh_final_clean.svg
-teaching/dwr_mesh_final_clean.svg
+../assets/results/05_final_meshes_triptych.png
+../assets/results/05_functional_error_vs_dofs.png
 ```
 
-Each individual SVG also has a PNG counterpart with the same stem.
+Fresh runs create problem-field, indicator, final-mesh, and convergence PNGs
+in `figures/`.  All detailed field and indicator values remain available
+under `fields/` for another plotting tool if desired.

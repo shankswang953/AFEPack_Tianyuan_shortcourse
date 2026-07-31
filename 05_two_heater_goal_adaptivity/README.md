@@ -185,25 +185,33 @@ use, for example,
 ```
 
 The recommended comparison is written to
-`output/comparison_residual_10_dual_10_dwr_7/`.  Important files are:
+`output/runs/comparison_residual_10_dual_10_dwr_7/`.  Its layout is stable:
 
-- `TEACHING.md`: a short four-part classroom narrative and a map of the
-  text-free slide assets;
-- `teaching/`: clean SVG and PNG figures with no embedded labels.  It includes
-  the problem fields, first/final indicator triptychs, and final-mesh
-  triptych;
+```text
+summary/                 convergence histories and reference values
+fields/problem/          sampled source and sensor weight
+fields/residual/         temperatures and residual indicators
+fields/dual/             temperatures and signed/magnitude dual data
+fields/dwr/              temperatures and localized DWR indicators
+meshes/{residual,dual,dwr}/
+                         OpenDX meshes at every level and at the final state
+figures/                  optional PNG teaching figures
+```
 
-- `source_profile.svg` and `sensor_weight.svg`: the PDE source and functional;
-- `residual_indicator_round_1.svg` and `dwr_indicator_round_1.svg`: the first
-  marking decisions;
-- `mesh_after.svg` and `dwr_mesh_after.svg`: the two final meshes;
-- `dual_magnitude.svg`: the discrete dual magnitude;
-- `dual_magnitude_round_10.svg`: the final dual-magnitude indicator and marks;
-- `functional_error_vs_dofs.svg`: the target-error comparison;
-- `functional_comparison.dat`: all values used in the comparison plot;
-- `dwr_indicator.dat`: signed and absolute localized DWR contributions plus
-  diagnostic residual and dual factors;
-- `dwr_history.dat`: raw and DWR-corrected functional values.
+The C++ program writes numerical data and OpenDX fields only; it does not
+generate SVG files.  When NumPy and Matplotlib are available, `run.sh` calls
+`plot_summary.py` to create:
+
+- `figures/problem_fields.png`;
+- `figures/indicators_initial.png` and `figures/indicators_final.png`;
+- `figures/meshes_final.png`;
+- `figures/functional_value_vs_dofs.png`;
+- `figures/functional_error_vs_dofs.png`.
+
+The main comparison table is `summary/functional_comparison.dat`.  Detailed
+localized contributions are stored in `fields/dwr/indicator_*.dat`.  The
+three convergence histories are `summary/residual_history.dat`,
+`summary/dual_history.dat`, and `summary/dwr_history.dat`.
 
 <!-- script-interface -->
 ## Launcher interface and output selection
@@ -215,7 +223,6 @@ The recommended comparison is written to
 ./run.sh [ROOT_MESH] --comparison-rounds RESIDUAL_ROUNDS DUAL_ROUNDS DWR_ROUNDS
 ```
 
-The default output is `output/`. Non-default round counts use
-`output/rounds_N/` or a `output/comparison_.../` directory. The root mesh
-defaults to `../common/mesh/unit_square/D`. Define the shared build and
-AFEPack runtime variables from the parent README when needed.
+Every run is placed under `output/runs/` using a name derived from its round
+counts.  The root mesh defaults to `../common/mesh/unit_square/D`. Define the
+shared build and AFEPack runtime variables from the parent README when needed.

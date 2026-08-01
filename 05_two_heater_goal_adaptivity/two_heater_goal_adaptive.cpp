@@ -1386,6 +1386,11 @@ int main(int argc, char* argv[]) {
            "DUAL_ROUNDS DWR_ROUNDS\n"
         << "       " << argv[0]
         << " ROOT_MESH --uniform-reference LEVEL\n";
+    std::cerr
+        << "\nThis is the low-level solver interface. From the example "
+           "directory, prefer:\n"
+        << "  ./run.sh --comparison-rounds 1 1 1\n"
+        << "  ./run.sh --uniform-reference 5\n";
     return EXIT_FAILURE;
   }
   int uniform_reference_level = 0;

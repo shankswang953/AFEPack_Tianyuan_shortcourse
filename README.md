@@ -158,7 +158,7 @@ animation to open the corresponding example and its reproducible workflow.
 ## Verified lecture commands
 
 Run each command from the named example directory. The commands below were
-retested on 2026-07-27.
+retested on 2026-07-31.
 
 | example | recommended command | purpose |
 |---|---|---|
@@ -167,7 +167,7 @@ retested on 2026-07-27.
 | `02_mesh_merge` | `./run.sh 3 0.035` | build the Tian and Yuan peer meshes and merge them |
 | `03_residual_and_dual` | `./run.sh` | residual, discrete dual, and one DWR step |
 | `04_boundary_flux_dual` | `./run.sh` | manufactured boundary-flux target |
-| `05_two_heater_goal_adaptivity` | `./run.sh ../common/mesh/unit_square/D --comparison-rounds 1 1 1` | fast three-strategy classroom comparison |
+| `05_two_heater_goal_adaptivity` | `./run.sh --comparison-rounds 1 1 1` | fast three-strategy classroom comparison; the launcher builds automatically |
 | `06_airfoil_mesh_motion` | `python3 airfoil_step.py --reset`, then `python3 airfoil_step.py 0.50 U -0.02 --width 0.12 --smooth-iterations 200` | one safe fixed-topology boundary action |
 | `07_poisson_shape_optimization` | `./run.sh output 4` | four coordinate-search sweeps with remeshing |
 | `08_airfoil_ml_iteration` | `./run_teaching_demo.sh` | reset and run the complete seed-2026 ML-iteration experiment |

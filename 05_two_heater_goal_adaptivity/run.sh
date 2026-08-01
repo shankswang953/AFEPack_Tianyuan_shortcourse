@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # Purpose: compare residual, dual-magnitude, and DWR adaptive refinements.
-# Usage: ./run.sh [ROOT_MESH] [--rounds N | --comparison-rounds R [U] D]
+# Usage: ./run.sh [ROOT_MESH] [--rounds N | --comparison-rounds R [U] D |
+#                                   --uniform-reference LEVEL]
 # ROOT_MESH defaults to ../common/mesh/unit_square/D.
 # Output: output/runs/<configuration> with summary, fields, meshes, and figures.
 # Configuration: edit ../course_config.local once for non-default paths.
@@ -11,9 +12,16 @@ set -eu
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 AFEPACK_EXAMPLES_ROOT=$(CDPATH= cd -- "$script_dir/.." && pwd)
 . "$AFEPACK_EXAMPLES_ROOT/course_config.sh"
-root_mesh=${1:-"$script_dir/../common/mesh/unit_square/D"}
+root_mesh="$script_dir/../common/mesh/unit_square/D"
 if [ "$#" -gt 0 ]; then
-  shift
+  case "$1" in
+    --rounds|--comparison-rounds|--uniform-reference)
+      ;;
+    *)
+      root_mesh=$1
+      shift
+      ;;
+  esac
 fi
 
 case "$root_mesh" in

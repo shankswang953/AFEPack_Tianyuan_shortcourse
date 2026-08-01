@@ -138,7 +138,7 @@ one DWR round add more cells than one residual round, the recommended run uses
 different round counts to compare approximately the same final primal budget:
 
 ```bash
-./run.sh ../common/mesh/unit_square/D --comparison-rounds 10 10 7
+./run.sh --comparison-rounds 10 10 7
 ```
 
 | strategy | rounds | final DOFs | `J(T_h)` | `|J(T_h)-J_ref|` |
@@ -172,16 +172,16 @@ there.
 ## Build and run
 
 ```bash
-make
-./run.sh ../common/mesh/unit_square/D --comparison-rounds 10 10 7
+./run.sh --comparison-rounds 10 10 7
 ```
 
-The default root mesh is `../common/mesh/unit_square/D`.  Equal round counts
-remain available with `--rounds N`.  To solve only on a uniformly refined mesh,
-use, for example,
+`run.sh` invokes `make` automatically. The default root mesh is
+`../common/mesh/unit_square/D`; pass another root mesh before the options only
+when needed. Equal round counts remain available with `--rounds N`. To solve
+only on a uniformly refined mesh, use, for example,
 
 ```bash
-./run.sh ../common/mesh/unit_square/D --uniform-reference 5
+./run.sh --uniform-reference 5
 ```
 
 The recommended comparison is written to
@@ -221,6 +221,7 @@ three convergence histories are `summary/residual_history.dat`,
 ./run.sh [ROOT_MESH] --rounds N
 ./run.sh [ROOT_MESH] --comparison-rounds RESIDUAL_ROUNDS DWR_ROUNDS
 ./run.sh [ROOT_MESH] --comparison-rounds RESIDUAL_ROUNDS DUAL_ROUNDS DWR_ROUNDS
+./run.sh [ROOT_MESH] --uniform-reference LEVEL
 ```
 
 Every run is placed under `output/runs/` using a name derived from its round

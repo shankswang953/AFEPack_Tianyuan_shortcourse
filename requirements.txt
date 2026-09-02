@@ -1,6 +1,9 @@
 # Numerical arrays used by plotting, the reward model, and reinforcement learning.
 numpy>=2.0
 
+# Latin-hypercube sampling for the low-dimensional airfoil design space.
+scipy>=1.14
+
 # Static figures and GIF animation writers.
 matplotlib>=3.9
 pillow>=10.0

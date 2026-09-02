@@ -185,9 +185,14 @@ def triangle_quality(nodes: np.ndarray, elements: np.ndarray) -> np.ndarray:
 
 def plot_selected_meshes(output: Path, figure_directory: Path) -> None:
     selected_ids = (output / "selected_ids.txt").read_text().split()
-    columns = 3
+    columns = 3 if len(selected_ids) <= 9 else 5
     rows = int(np.ceil(len(selected_ids) / columns))
-    figure, axes = plt.subplots(rows, columns, figsize=(13.2, 3.25 * rows))
+    row_height = 3.25 if len(selected_ids) <= 9 else 1.85
+    figure, axes = plt.subplots(
+        rows,
+        columns,
+        figsize=(13.2, row_height * rows),
+    )
     axes = np.atleast_1d(axes).ravel()
     quality_rows: list[tuple[str, int, int, float]] = []
     for index, (axis, sample_id) in enumerate(zip(axes, selected_ids)):
@@ -202,17 +207,26 @@ def plot_selected_meshes(output: Path, figure_directory: Path) -> None:
                 edge_indices.add(tuple(sorted((triangle[first], triangle[second]))))
         segments = [[nodes[first], nodes[second]] for first, second in edge_indices]
         axis.add_collection(
-            LineCollection(segments, colors="#2f6b9a", linewidths=0.48)
+            LineCollection(
+                segments,
+                colors="#2f6b9a",
+                linewidths=0.48 if len(selected_ids) <= 9 else 0.34,
+            )
         )
         axis.set_xlim(-0.16, 1.16)
         axis.set_ylim(-0.35, 0.35)
         axis.set_aspect("equal", adjustable="box")
         axis.axis("off")
-        axis.set_title(
-            f"{index + 1}. {sample_id}  |  {len(nodes)} nodes, "
-            f"{len(elements)} cells, $q_{{min}}={np.min(quality):.2f}$",
-            fontsize=9.5,
-        )
+        if len(selected_ids) <= 9:
+            title = (
+                f"{index + 1}. {sample_id}  |  {len(nodes)} nodes, "
+                f"{len(elements)} cells, $q_{{min}}={np.min(quality):.2f}$"
+            )
+            title_size = 9.5
+        else:
+            title = f"{index + 1}  |  $q_{{min}}={np.min(quality):.2f}$"
+            title_size = 8
+        axis.set_title(title, fontsize=title_size)
     for axis in axes[len(selected_ids):]:
         axis.axis("off")
     figure.tight_layout()

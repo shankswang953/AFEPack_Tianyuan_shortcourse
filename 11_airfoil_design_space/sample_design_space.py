@@ -62,6 +62,12 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=Path("output"))
     parser.add_argument("--candidates", type=int, default=2048)
     parser.add_argument("--selected", type=int, default=6)
+    parser.add_argument(
+        "--reserve",
+        type=int,
+        default=5,
+        help="extra maximin candidates kept as replacements for unmeshable shapes",
+    )
     parser.add_argument("--seed", type=int, default=2026)
     return parser.parse_args()
 
@@ -107,16 +113,20 @@ def main() -> None:
         else:
             reason_counts.update(result.reasons)
 
-    if len(valid_rows) < arguments.selected:
+    ranked_count = arguments.selected + arguments.reserve
+    if arguments.selected < 1 or arguments.reserve < 0:
+        raise ValueError("--selected must be positive and --reserve nonnegative")
+    if len(valid_rows) < ranked_count:
         raise RuntimeError(
             f"only {len(valid_rows)} valid candidates; "
-            f"cannot select {arguments.selected}"
+            f"cannot select {ranked_count} including reserves"
         )
 
-    selected_local = farthest_point_selection(
-        np.asarray(valid_units), arguments.selected
+    ranked_local = farthest_point_selection(
+        np.asarray(valid_units), ranked_count
     )
-    selected_rows = [valid_rows[index] for index in selected_local]
+    ranked_rows = [valid_rows[index] for index in ranked_local]
+    selected_rows = ranked_rows[:arguments.selected]
 
     write_table(output / "candidates.csv", all_rows)
     write_table(output / "accepted.csv", valid_rows)
@@ -125,20 +135,28 @@ def main() -> None:
         [row for row in all_rows if not row["valid"]],
     )
     write_table(output / "selected.csv", selected_rows)
+    write_table(output / "ranked.csv", ranked_rows)
 
     data_directory = output / "data"
-    selected_ids: list[str] = []
-    for local_index, row in zip(selected_local, selected_rows):
+    ranked_ids: list[str] = []
+    for local_index, row in zip(ranked_local, ranked_rows):
         candidate_id = int(row["candidate_id"])
         sample_name = f"airfoil_{candidate_id:04d}"
-        selected_ids.append(sample_name)
+        ranked_ids.append(sample_name)
         write_uiuc(
             data_directory / f"{sample_name}.dat",
             valid_geometries[local_index],
             f"DESIGN SAMPLE {candidate_id:04d}",
         )
     (output / "selected_ids.txt").write_text(
-        "".join(f"{name}\n" for name in selected_ids), encoding="utf-8"
+        "".join(f"{name}\n" for name in ranked_ids[:arguments.selected]),
+        encoding="utf-8",
+    )
+    (output / "ranked_ids.txt").write_text(
+        "".join(f"{name}\n" for name in ranked_ids), encoding="utf-8"
+    )
+    (output / "selection_request.txt").write_text(
+        f"{arguments.selected}\n", encoding="utf-8"
     )
 
     with (output / "rejection_summary.csv").open(
@@ -151,8 +169,8 @@ def main() -> None:
     print(f"Candidates proposed : {len(all_rows)}")
     print(f"Candidates accepted : {len(valid_rows)}")
     print(f"Candidates rejected : {len(all_rows) - len(valid_rows)}")
-    print(f"Dispersed selections: {len(selected_rows)}")
-    for name, row in zip(selected_ids, selected_rows):
+    print(f"Dispersed selections: {len(selected_rows)} (+{arguments.reserve} reserves)")
+    for name, row in zip(ranked_ids[:arguments.selected], selected_rows):
         values = " ".join(f"{key}={float(row[key]):.4f}" for key in PARAMETER_NAMES)
         print(f"  {name}: {values}")
 

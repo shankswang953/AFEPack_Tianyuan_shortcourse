@@ -39,8 +39,11 @@ orientation, not merely a negative value of `m`.
 
 From the valid candidates, greedy maximin selection chooses the next point
 farthest from the selected set in normalized five-dimensional parameter space.
-Only these dispersed designs are passed through the existing
+Five additional ranked reserves are kept by default. Only these dispersed
+designs are passed through the existing
 `data -> Bezier fit -> boundary points -> EasyMesh` pipeline.
+An EasyMesh result with invalid vertex indices, degenerate triangles, or
+minimum quality below 0.40 is rejected and replaced by the next reserve.
 
 ## Run
 
@@ -52,14 +55,14 @@ The deterministic defaults are:
 
 ```text
 2048 wide Latin-hypercube proposals
-6 dispersed valid airfoils
+6 dispersed, meshable airfoils (+5 ranked reserves)
 seed 2026
 ```
 
 They can be changed explicitly:
 
 ```bash
-./run.sh --candidates 4096 --selected 9 --seed 2026
+./run.sh --candidates 4096 --selected 9 --reserve 5 --seed 2026
 ```
 
 The main outputs are:
@@ -69,9 +72,11 @@ output/candidates.csv          every proposal and rejection reason
 output/accepted.csv            geometrically admissible proposals
 output/rejected.csv            rejected proposals
 output/selected.csv            dispersed designs intended for initial CFD
+output/ranked.csv              selections followed by replacement candidates
 output/data/*.dat              high-resolution boundary representations
 output/cases/*/airfoil.mesh    corresponding EasyMesh/AFEPack meshes
 output/mesh_quality.csv        node/cell counts and minimum triangle quality
+output/mesh_rejections.csv     post-EasyMesh failures replaced by reserves
 output/figures/design_space_selection.png
 output/figures/validator_examples.png
 output/figures/selected_airfoils.png

@@ -39,7 +39,9 @@ while IFS= read -r sample_id; do
     }
     "$EASYMESH2MESH_BIN" airfoil airfoil.mesh
   )
-done < "$output_dir/selected_ids.txt"
+done < "$output_dir/ranked_ids.txt"
+
+"$PYTHON_BIN" "$script_dir/finalize_mesh_selection.py" "$output_dir"
 
 if course_python_can_plot; then
   "$PLOT_PYTHON" "$script_dir/plot_results.py" "$output_dir"

@@ -119,14 +119,29 @@ def plot_design_space(output: Path, figure_directory: Path) -> None:
 
 def plot_selected_shapes(output: Path, figure_directory: Path) -> None:
     selected_ids = (output / "selected_ids.txt").read_text().split()
-    columns = 3
+    columns = 3 if len(selected_ids) <= 9 else 5
     rows = int(np.ceil(len(selected_ids) / columns))
-    figure, axes = plt.subplots(rows, columns, figsize=(13.2, 2.9 * rows))
+    row_height = 2.9 if len(selected_ids) <= 9 else 1.55
+    figure, axes = plt.subplots(
+        rows,
+        columns,
+        figsize=(13.2, row_height * rows),
+    )
     axes = np.atleast_1d(axes).ravel()
     for index, (axis, sample_id) in enumerate(zip(axes, selected_ids)):
         geometry = read_uiuc(output / "data" / f"{sample_id}.dat")
-        draw_outline(axis, geometry, color="#17324d", linewidth=2.3)
-        axis.set_title(f"{index + 1}. {sample_id}", fontsize=11)
+        draw_outline(
+            axis,
+            geometry,
+            color="#17324d",
+            linewidth=2.3 if len(selected_ids) <= 9 else 1.55,
+        )
+        title = (
+            f"{index + 1}. {sample_id}"
+            if len(selected_ids) <= 9
+            else f"{index + 1}"
+        )
+        axis.set_title(title, fontsize=11 if len(selected_ids) <= 9 else 8)
     for axis in axes[len(selected_ids):]:
         axis.axis("off")
     figure.tight_layout()
